@@ -55,6 +55,11 @@ public class MainActivity extends AppCompatActivity {
         inflateChart(weekLineChartPresentation);
     }
 
+    /**
+     * RadioButton Group onClick listener.
+     * Inflates the Line chart respectfully to the clicked RadioButton
+     * @param view - clicked RadioButton
+     */
     public void onRadioButtonClicked(View view) {
         // Is the button now checked?
         boolean checked = ((RadioButton) view).isChecked();
@@ -71,7 +76,11 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    //prepare data for the Line Chart
+    /**
+     * Prepare data for the Line Chart
+     * @param days - Number of Jimdo usage day statistics
+     * @return LineChartPresentation object for Line Chart initialization
+     */
     private LineChartPresentation prepareData(int days) {
 
         LineChartPresentation lcp = new LineChartPresentation();
@@ -125,7 +134,10 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
-    //inflate Line Chart with data, initialize and show
+    /**
+     * Inflates Line Chart with data, initializes the look and feel, shows the Line Chart.
+     * @param lcp - LineChartPresentation instance.
+     */
     private void inflateChart(LineChartPresentation lcp) {
 
         LineChartView mLineChart = (LineChartView) findViewById(R.id.linechart);
