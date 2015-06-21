@@ -1,0 +1,9 @@
+<resources>
+
+    <!-- the theme applied to the application or activity -->
+    <style name="JimdoActionBarTheme" parent="Theme.AppCompat.Light">
+        <!-- colorPrimary is used for the default action bar background -->
+        <item name="colorPrimary">#5f79ed</item>
+    </style>
+
+</resources>

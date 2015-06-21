@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="line_grid">#00a694</color>
+    <color name="line_visits">#8AB8E6</color>
+    <color name="line_pageviews">#7A52CC</color>
+    <color name="line_visits_bg">#A3D1FF</color>
+    <color name="line_pageviews_bg">#9966FF</color>
+</resources>
