@@ -1,8 +1,9 @@
+/*
+ * Copyright (C) 2015 Mikhail Goldenzweig
+ * MIT Licence
+ */
 package de.goldenzweig.jimdostats;
 
-/**
- * Created by mihahh on 21.06.2015.
- */
 public class LineChartPresentation {
 
     public float[] visitsArray;

@@ -1,11 +1,12 @@
+/*
+ * Copyright (C) 2015 Mikhail Goldenzweig
+ * MIT Licence
+ */
 package de.goldenzweig.jimdostats;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-/**
- * Created by mihahh on 20.06.2015.
- */
 public class JimdoPerDayStatistics implements IJimdoPerDayStatistics {
 
     private int visits;

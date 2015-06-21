@@ -1,8 +1,9 @@
+/*
+ * Copyright (C) 2015 Mikhail Goldenzweig
+ * MIT Licence
+ */
 package de.goldenzweig.jimdostats;
 
-/**
- * Created by mihahh on 20.06.2015.
- */
 public interface IJimdoPerDayStatistics {
     // Unique visit for a website on a given date
     int getVisits();

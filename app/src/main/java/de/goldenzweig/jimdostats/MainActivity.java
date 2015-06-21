@@ -1,3 +1,7 @@
+/*
+ * Copyright (C) 2015 Mikhail Goldenzweig
+ * MIT Licence
+ */
 package de.goldenzweig.jimdostats;
 
 import android.graphics.DashPathEffect;
@@ -78,13 +82,13 @@ public class MainActivity extends AppCompatActivity {
         LinkedList<Float> visitsList = new LinkedList<>();
         LinkedList<Float> pageViewsList = new LinkedList<>();
 
-        for(int i = 0; i < days; i++) {
+        for (int i = 0; i < days; i++) {
             JimdoPerDayStatistics stat = mockSatats.get(i);
 
             int visits = stat.getVisits();
             int pageViews = stat.getPageViews();
 
-            if(visits > maxValue || pageViews > maxValue) {
+            if (visits > maxValue || pageViews > maxValue) {
                 maxValue = Math.max(visits, pageViews);
             }
 
@@ -93,8 +97,7 @@ public class MainActivity extends AppCompatActivity {
 
             if (days == WEEK_DAYS) {
                 datesList.push(stat.getShortDate());
-            } else
-            if ((i % 4) == 0) {
+            } else if ((i % 4) == 0) {
                 datesList.push(stat.getShortDate());
             } else {
                 datesList.push("");
