@@ -48,6 +48,7 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        //prepare the data here to avoid unnecessary overhead while switching views
         mockSatats = generateMockStats(MONTH_DAYS);
         weekLineChartPresentation = prepareData(WEEK_DAYS);
         monthLineChartPresentation = prepareData(MONTH_DAYS);
@@ -104,6 +105,7 @@ public class MainActivity extends AppCompatActivity {
             visitsList.push(new Float(visits));
             pageViewsList.push(new Float(pageViews));
 
+            // in month view add only every 4th date to avoid overfilling thy x-axis
             if (days == WEEK_DAYS) {
                 datesList.push(stat.getShortDate());
             } else if ((i % 4) == 0) {
@@ -113,18 +115,21 @@ public class MainActivity extends AppCompatActivity {
             }
         }
 
+        //first column is empty to avoid points being drawn directly on the y-axis
         visitsList.push(0f);
         pageViewsList.push(0f);
         datesList.push("");
 
         //Round maxValue up to the closest 10
         lcp.maxValue = (int) Math.ceil(maxValue / 10d) * 10;
+        //Calculate step so that we always have exactly 10 segments on the y-axis
         lcp.step = (int) Math.floor(maxValue / 10d);
 
         lcp.visitsArray = new float[visitsList.size()];
         lcp.pageViewsArray = new float[pageViewsList.size()];
         lcp.datesArray = datesList.toArray(new String[datesList.size()]);
 
+        //Line Charts accepts only primitive value arrays
         for (int i = 0; i <= days; i++) {
             lcp.visitsArray[i] = visitsList.get(i).floatValue();
             lcp.pageViewsArray[i] = pageViewsList.get(i).floatValue();
