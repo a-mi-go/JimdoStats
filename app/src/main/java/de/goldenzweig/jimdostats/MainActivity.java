@@ -79,7 +79,7 @@ public class MainActivity extends AppCompatActivity {
 
     /**
      * Prepare data for the Line Chart
-     * @param days - Number of Jimdo usage day statistics
+     * @param days - Number of Jimdo day usage statistics
      * @return LineChartPresentation object for Line Chart initialization
      */
     private LineChartPresentation prepareData(int days) {
@@ -102,8 +102,8 @@ public class MainActivity extends AppCompatActivity {
                 maxValue = Math.max(visits, pageViews);
             }
 
-            visitsList.push(new Float(visits));
-            pageViewsList.push(new Float(pageViews));
+            visitsList.push((float)visits);
+            pageViewsList.push((float)pageViews);
 
             // in month view add only every 4th date to avoid overfilling thy x-axis
             if (days == WEEK_DAYS) {
@@ -123,7 +123,7 @@ public class MainActivity extends AppCompatActivity {
         //Round maxValue up to the closest 10
         lcp.maxValue = (int) Math.ceil(maxValue / 10d) * 10;
         //Calculate step so that we always have exactly 10 segments on the y-axis
-        lcp.step = (int) Math.floor(maxValue / 10d);
+        lcp.step = (int) Math.floor(lcp.maxValue / 10);
 
         lcp.visitsArray = new float[visitsList.size()];
         lcp.pageViewsArray = new float[pageViewsList.size()];
@@ -131,8 +131,8 @@ public class MainActivity extends AppCompatActivity {
 
         //Line Charts accepts only primitive value arrays
         for (int i = 0; i <= days; i++) {
-            lcp.visitsArray[i] = visitsList.get(i).floatValue();
-            lcp.pageViewsArray[i] = pageViewsList.get(i).floatValue();
+            lcp.visitsArray[i] = visitsList.get(i);
+            lcp.pageViewsArray[i] = pageViewsList.get(i);
         }
 
         return lcp;
@@ -200,7 +200,7 @@ public class MainActivity extends AppCompatActivity {
 
     /**
      * Generates a list with random Jimdo Website statistics.
-     * @param numberOfDays
+     * @param numberOfDays - Number of Jimdo day usage statistics
      * @return generated list of JimdoPerDayStatistics
      */
     private List<JimdoPerDayStatistics> generateMockStats(int numberOfDays) {
