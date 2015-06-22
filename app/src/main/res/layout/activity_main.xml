@@ -21,8 +21,6 @@
             android:layout_height="wrap_content"
             android:layout_gravity="center_horizontal">
 
-
-
             <LinearLayout
                 android:orientation="vertical"
                 android:layout_width="wrap_content"
@@ -40,8 +38,6 @@
                     android:text=" - Page views" />
             </LinearLayout>
 
-
-
             <LinearLayout
                 android:orientation="horizontal"
                 android:layout_width="match_parent"
@@ -54,7 +50,8 @@
                     android:src="@drawable/link_50"
                     android:id="@+id/top_pages_btn"
                     android:layout_marginLeft="10dip"
-                    android:scaleType="fitCenter" />
+                    android:scaleType="fitCenter"
+                    android:onClick="onTopPagesButtonClicked"/>
 
                 <ImageButton
                     android:layout_width="50dip"
@@ -62,7 +59,8 @@
                     android:src="@drawable/split_50"
                     android:id="@+id/top_referer_btn"
                     android:layout_marginLeft="10dip"
-                    android:scaleType="fitCenter" />
+                    android:scaleType="fitCenter"
+                    android:onClick="onTopRefererButtonClicked"/>
 
                 <ImageButton
                     android:layout_width="50dip"
@@ -70,7 +68,8 @@
                     android:src="@drawable/multiple_devices_50"
                     android:id="@+id/top_devices_btn"
                     android:layout_marginLeft="10dip"
-                    android:scaleType="fitCenter" />
+                    android:scaleType="fitCenter"
+                    android:onClick="onTopDevicesButtonClicked"/>
             </LinearLayout>
 
 

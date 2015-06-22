@@ -9,11 +9,13 @@ import android.graphics.Paint;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
+import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
+import android.widget.Toast;
 
 import com.db.chart.Tools;
 import com.db.chart.model.LineSet;
@@ -239,6 +241,30 @@ public class MainActivity extends AppCompatActivity {
 
         Animation animation = new Animation().setEasing(mCurrEasing);
         mLineChart.show(animation.setEndAction(mEnterEndAction));
+    }
+
+    public void onTopPagesButtonClicked(View view) {
+        Toast toast = Toast.makeText(getApplicationContext(),
+                "This feature is not implemented yet",
+                Toast.LENGTH_SHORT);
+        toast.setGravity(Gravity.CENTER, 0, 0);
+        toast.show();
+    }
+
+    public void onTopRefererButtonClicked(View view) {
+        Toast toast = Toast.makeText(getApplicationContext(),
+                "This feature is not implemented yet",
+                Toast.LENGTH_SHORT);
+        toast.setGravity(Gravity.CENTER, 0, 0);
+        toast.show();
+    }
+
+    public void onTopDevicesButtonClicked(View view) {
+        Toast toast = Toast.makeText(getApplicationContext(),
+                "This feature is not implemented yet",
+                Toast.LENGTH_SHORT);
+        toast.setGravity(Gravity.CENTER, 0, 0);h
+        toast.show();
     }
 
     @Override
