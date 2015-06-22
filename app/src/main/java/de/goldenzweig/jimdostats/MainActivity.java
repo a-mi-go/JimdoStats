@@ -272,7 +272,7 @@ public class MainActivity extends AppCompatActivity {
         Toast toast = Toast.makeText(getApplicationContext(),
                 "This feature is not implemented yet",
                 Toast.LENGTH_SHORT);
-        toast.setGravity(Gravity.CENTER, 0, 0);h
+        toast.setGravity(Gravity.CENTER, 0, 0);
         toast.show();
     }
 
