@@ -49,10 +49,17 @@ public class JimdoPerDayStatistics implements IJimdoPerDayStatistics {
         return formatter.format(date);
     }
 
+    /**
+     * Add a visit to to the day statistic
+     * @param visit Visit instance to be added
+     */
     public void addVisit(Visit visit) {
         this.visits.add(visit);
     }
 
+    /**
+     * @param date Date of the statistics
+     */
     public void setDate(Date date) {
         this.date = date;
     }
