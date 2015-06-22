@@ -21,14 +21,14 @@ public class Visit {
     }
 
     /**
-     * @return Page views during the visit
+     * @return {@link PageView}s of the visit
      */
     public List<PageView> getPageViews() {
         return pageViews;
     }
 
     /**
-     * @param pageViews List of Views to be set
+     * @param pageViews List of {@link PageView}s to be set
      */
     public void setPageViews(List<PageView> pageViews) {
         this.pageViews = pageViews;

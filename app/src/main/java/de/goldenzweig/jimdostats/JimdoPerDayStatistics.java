@@ -51,7 +51,7 @@ public class JimdoPerDayStatistics implements IJimdoPerDayStatistics {
 
     /**
      * Add a visit to to the day statistic
-     * @param visit Visit instance to be added
+     * @param visit {@link Visit} instance to be added
      */
     public void addVisit(Visit visit) {
         this.visits.add(visit);

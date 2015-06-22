@@ -128,7 +128,7 @@ public class MainActivity extends AppCompatActivity {
      * Prepare data for the Line Chart
      *
      * @param days Number of Jimdo day usage statistics
-     * @return LineChartPresentation object for Line Chart initialization
+     * @return {@link LineChartPresentation} object for Line Chart initialization
      */
     private LineChartPresentation prepareLineChartData(int days) {
 
@@ -159,11 +159,12 @@ public class MainActivity extends AppCompatActivity {
     }
 
     /**
-     * Sets data from mockSatats to the given LineChartPresentation instance
+     * Sets data from mockSatats to the given {@link LineChartPresentation} instance
+     * for a specified day
      * used by {@link #prepareLineChartData} method
      *
-     * @param lcp LineChartPresentation instance
-     * @param days Overall days to be set in the LineChartPresentation
+     * @param lcp {@link LineChartPresentation} instance
+     * @param days Overall days to be set in the lcp ({@link LineChartPresentation})
      * @param day For which day should the data be set. Value of this param may vary from 1 to n.
      */
     private void setDayStatisticsToPresentation(LineChartPresentation lcp, int days, int day) {
@@ -195,7 +196,7 @@ public class MainActivity extends AppCompatActivity {
     /**
      * Inflates Line Chart with data, initializes the look and feel, shows the Line Chart.
      *
-     * @param lcp LineChartPresentation instance.
+     * @param lcp {@link LineChartPresentation} instance.
      */
     private void inflateLineChart(LineChartPresentation lcp) {
 

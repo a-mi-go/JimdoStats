@@ -9,12 +9,12 @@ import java.util.List;
 public interface IJimdoPerDayStatistics {
 
     /**
-     * @return Unique visits for a website on a given date
+     * @return Unique {@link Visit}s for a website on a given date
      */
     List<Visit> getVisits();
 
     /**
-     * @return Number of Unique visits for a website on a given date
+     * @return Number of Unique {@link Visit}s for a website on a given date
      */
     int getVisitCount();
 
