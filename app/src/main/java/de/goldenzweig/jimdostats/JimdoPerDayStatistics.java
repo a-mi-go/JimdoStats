@@ -5,34 +5,37 @@
 package de.goldenzweig.jimdostats;
 
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 public class JimdoPerDayStatistics implements IJimdoPerDayStatistics {
 
-    private int visits;
-    private int pageViews;
+    private List<Visit> visits;
     private Date date;
 
-    public void setVisits(int visits) {
-        this.visits = visits;
-    }
-
-    public void setPageViews(int pageViews) {
-        this.pageViews = pageViews;
-    }
-
-    public void setDate(Date date) {
-        this.date = date;
+    public JimdoPerDayStatistics() {
+        visits = new ArrayList<>();
+        date = new Date();
     }
 
     @Override
-    public int getVisits() {
+    public List<Visit> getVisits() {
         return visits;
     }
 
     @Override
-    public int getPageViews() {
-        return pageViews;
+    public int getVisitCount() {
+        return visits.size();
+    }
+
+    @Override
+    public int getPageViewCount() {
+        int totalPageViews = 0;
+        for (Visit v: visits) {
+            totalPageViews += v.getPageViews().size();
+        }
+        return totalPageViews;
     }
 
     @Override
@@ -40,8 +43,17 @@ public class JimdoPerDayStatistics implements IJimdoPerDayStatistics {
         return date.toString();
     }
 
+    @Override
     public String getShortDate() {
         SimpleDateFormat formatter = new SimpleDateFormat("MM.dd");
         return formatter.format(date);
+    }
+
+    public void addVisit(Visit visit) {
+        this.visits.add(visit);
+    }
+
+    public void setDate(Date date) {
+        this.date = date;
     }
 }

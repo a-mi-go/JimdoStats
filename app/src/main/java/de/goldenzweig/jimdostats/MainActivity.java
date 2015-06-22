@@ -7,11 +7,13 @@ package de.goldenzweig.jimdostats;
 import android.graphics.DashPathEffect;
 import android.graphics.Paint;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.RadioButton;
+import android.widget.RadioGroup;
 
 import com.db.chart.Tools;
 import com.db.chart.model.LineSet;
@@ -26,7 +28,6 @@ import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
 
@@ -35,18 +36,66 @@ public class MainActivity extends AppCompatActivity {
 
     private static final int WEEK_DAYS = 7;
     private static final int MONTH_DAYS = 30;
+    private static final long MILLISECONDS_IN_DAY = 86400000;
 
     private List<JimdoPerDayStatistics> mockSatats;
     private LineChartPresentation weekLineChartPresentation;
     private LineChartPresentation monthLineChartPresentation;
+    private LineChartPresentation currentChartPresentation;
 
     //Animation Style
     private static BaseEasingMethod mCurrEasing = new QuintEaseOut();
+
+    private LineChartView mLineChart;
+    private RadioGroup mRadioGroup;
+    private Handler mHandler;
+
+
+    /**
+     * inflate and redraw chart in separate thread
+     */
+    private final Runnable mInflateChartThread = new Runnable() {
+        @Override
+        public void run() {
+            mHandler.postDelayed(new Runnable() {
+                public void run() {
+                    inflateChart(currentChartPresentation);
+                }
+            }, 50);
+        }
+    };
+
+    /**
+     * enable radioGroup after chart animation is finished
+     */
+    private final Runnable mEnterEndAction = new Runnable() {
+        @Override
+        public void run() {
+            setRadioGroupEnabled(true);
+        }
+    };
+
+    /**
+     * enables or disables all radioButtons in the group
+     */
+    private void setRadioGroupEnabled(boolean enabled) {
+        if (mRadioGroup != null) {
+            for (int i = 0; i < mRadioGroup.getChildCount(); i++) {
+                mRadioGroup.getChildAt(i).setEnabled(enabled);
+            }
+        }
+    }
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        mLineChart = (LineChartView) findViewById(R.id.linechart);
+        mRadioGroup = (RadioGroup) findViewById(R.id.radio_group);
+
+        mHandler = new Handler();
 
         //prepare the data here to avoid unnecessary overhead while switching views
         mockSatats = generateMockStats(MONTH_DAYS);
@@ -68,13 +117,15 @@ public class MainActivity extends AppCompatActivity {
         switch(view.getId()) {
             case R.id.radio_week:
                 if (checked)
-                    inflateChart(weekLineChartPresentation);
+                    currentChartPresentation = weekLineChartPresentation;
                     break;
             case R.id.radio_month:
                 if (checked)
-                    inflateChart(monthLineChartPresentation);
-                    break;
+                    currentChartPresentation = monthLineChartPresentation;
+                break;
         }
+        setRadioGroupEnabled(false);
+        mInflateChartThread.run();
     }
 
     /**
@@ -88,52 +139,43 @@ public class MainActivity extends AppCompatActivity {
         //Max value of visits or page views in the stats
         int maxValue = 0;
 
-        LinkedList<String> datesList = new LinkedList<>();
-        LinkedList<Float> visitsList = new LinkedList<>();
-        LinkedList<Float> pageViewsList = new LinkedList<>();
+        //initialize the LineChartPresentation instance
+        lcp.visitsArray = new float[days+1];
+        lcp.pageViewsArray = new float[days+1];
+        lcp.datesArray = new String[days+1];
+
+        //first row is empty to avoid points being drawn directly on the y-axis
+        lcp.visitsArray[0] = 0f;
+        lcp.pageViewsArray[0] = 0f;
+        lcp.datesArray[0] = "";
 
         for (int i = 0; i < days; i++) {
-            JimdoPerDayStatistics stat = mockSatats.get(i);
 
-            int visits = stat.getVisits();
-            int pageViews = stat.getPageViews();
+            JimdoPerDayStatistics stat = mockSatats.get(i);
+            int visits = stat.getVisitCount();
+            int pageViews = stat.getPageViewCount();
 
             if (visits > maxValue || pageViews > maxValue) {
                 maxValue = Math.max(visits, pageViews);
             }
 
-            visitsList.push((float)visits);
-            pageViewsList.push((float)pageViews);
+            lcp.visitsArray[i+1] = visits;
+            lcp.pageViewsArray[i+1] = pageViews;
 
             // in month view add only every 4th date to avoid overfilling thy x-axis
             if (days == WEEK_DAYS) {
-                datesList.push(stat.getShortDate());
+                lcp.datesArray[i+1] = stat.getShortDate();
             } else if ((i % 4) == 0) {
-                datesList.push(stat.getShortDate());
+                lcp.datesArray[i+1] = stat.getShortDate();
             } else {
-                datesList.push("");
+                lcp.datesArray[i+1] = "";
             }
         }
-
-        //first column is empty to avoid points being drawn directly on the y-axis
-        visitsList.push(0f);
-        pageViewsList.push(0f);
-        datesList.push("");
 
         //Round maxValue up to the closest 10
         lcp.maxValue = (int) Math.ceil(maxValue / 10d) * 10;
         //Calculate step so that we always have exactly 10 segments on the y-axis
         lcp.step = (int) Math.floor(lcp.maxValue / 10);
-
-        lcp.visitsArray = new float[visitsList.size()];
-        lcp.pageViewsArray = new float[pageViewsList.size()];
-        lcp.datesArray = datesList.toArray(new String[datesList.size()]);
-
-        //Line Charts accepts only primitive value arrays
-        for (int i = 0; i <= days; i++) {
-            lcp.visitsArray[i] = visitsList.get(i);
-            lcp.pageViewsArray[i] = pageViewsList.get(i);
-        }
 
         return lcp;
     }
@@ -145,7 +187,6 @@ public class MainActivity extends AppCompatActivity {
      */
     private void inflateChart(LineChartPresentation lcp) {
 
-        LineChartView mLineChart = (LineChartView) findViewById(R.id.linechart);
         mLineChart.reset();
 
         //init and add "visits" line to the chart
@@ -194,7 +235,8 @@ public class MainActivity extends AppCompatActivity {
                 .setYLabels(YController.LabelPosition.OUTSIDE)
                 .setLabelsFormat(new DecimalFormat("##"));
 
-        mLineChart.show(new Animation().setEasing(mCurrEasing));
+        Animation animation = new Animation().setEasing(mCurrEasing);
+        mLineChart.show(animation.setEndAction(mEnterEndAction));
     }
 
 
@@ -207,15 +249,35 @@ public class MainActivity extends AppCompatActivity {
 
         List<JimdoPerDayStatistics> mockStats = new ArrayList<>();
 
+        String[] referer = {"www.google.com","www.yandex.ru","","www.altavista.com"};
+        String[] pages = {"test1.jimdo.com","test2.jimdo.com","test3.jimdo.com"};
+        String[] devices = {"android","iphone","pc"};
+        String[] os = {"Windows","Linux","MacOS", "iOS", "Android"};
+
         Random rand = new Random();
-        long dayTime = Calendar.getInstance().getTimeInMillis();
+        //go back in time for the "numberOfDays"
+        long dayTime = Calendar.getInstance().getTimeInMillis() - (MILLISECONDS_IN_DAY*numberOfDays);
         for (int day = 0; day < numberOfDays; day++) {
             JimdoPerDayStatistics dayStat = new JimdoPerDayStatistics();
             int uniqueVisits = rand.nextInt(20);
-            dayStat.setVisits(uniqueVisits);
-            dayStat.setPageViews(uniqueVisits + rand.nextInt(20));
-            dayTime = dayTime - (24*60*60*1000);
+            int pageViews = rand.nextInt(3)+1; //1 to 4 pageviews per visit
+
+            for (int v = 0; v < uniqueVisits; v++) {
+                Visit visit = new Visit();
+                for (int p = 0; p < pageViews; p++) {
+                    PageView pageView = new PageView();
+                    pageView.setPage(pages[rand.nextInt(2)]);
+                    pageView.setTimeSpentOnPage(rand.nextInt(100000));
+                    visit.addPageView(pageView);
+                }
+                visit.setReferer(referer[rand.nextInt(2)]);
+                visit.setDevice(devices[rand.nextInt(2)]);
+                visit.setOS(os[rand.nextInt(4)]);
+                dayStat.addVisit(visit);
+            }
             dayStat.setDate(new Date(dayTime));
+            //back to the future
+            dayTime = dayTime + MILLISECONDS_IN_DAY;
 
             mockStats.add(dayStat);
         }

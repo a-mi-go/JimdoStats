@@ -15,16 +15,66 @@
         android:layout_alignParentTop="true"
         android:layout_centerHorizontal="true">
 
-        <TextView
-            android:layout_width="wrap_content"
+        <LinearLayout
+            android:orientation="horizontal"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:drawableLeft="@drawable/abc_list_longpressed_holo"
-            android:text=" - Visits" />
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:drawableLeft="@drawable/abc_list_focused_holo"
-            android:text=" - Page views" />
+            android:layout_gravity="center_horizontal">
+
+
+
+            <LinearLayout
+                android:orientation="vertical"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:layout_marginTop="6dip">
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:drawableLeft="@drawable/abc_list_longpressed_holo"
+                    android:text=" - Visits" />
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:drawableLeft="@drawable/abc_list_focused_holo"
+                    android:text=" - Page views" />
+            </LinearLayout>
+
+
+
+            <LinearLayout
+                android:orientation="horizontal"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:gravity="right">
+
+                <ImageButton
+                    android:layout_width="50dip"
+                    android:layout_height="50dip"
+                    android:src="@drawable/link_50"
+                    android:id="@+id/top_pages_btn"
+                    android:layout_marginLeft="10dip"
+                    android:scaleType="fitCenter" />
+
+                <ImageButton
+                    android:layout_width="50dip"
+                    android:layout_height="50dip"
+                    android:src="@drawable/split_50"
+                    android:id="@+id/top_referer_btn"
+                    android:layout_marginLeft="10dip"
+                    android:scaleType="fitCenter" />
+
+                <ImageButton
+                    android:layout_width="50dip"
+                    android:layout_height="50dip"
+                    android:src="@drawable/multiple_devices_50"
+                    android:id="@+id/top_devices_btn"
+                    android:layout_marginLeft="10dip"
+                    android:scaleType="fitCenter" />
+            </LinearLayout>
+
+
+        </LinearLayout>
 
         <com.db.chart.view.LineChartView
             android:id="@+id/linechart"
@@ -36,6 +86,7 @@
 
         <RadioGroup
             android:orientation="horizontal"
+            android:id="@+id/radio_group"
             android:layout_width="match_parent"
             android:layout_height="110dip"
             android:layout_weight="1"
