@@ -102,7 +102,7 @@ public class MainActivity extends AppCompatActivity {
     /**
      * RadioButton Group onClick listener.
      * Inflates the Line chart respectfully to the clicked RadioButton
-     * @param view - clicked RadioButton
+     * @param view clicked RadioButton
      */
     public void onRadioButtonClicked(View view) {
         // Is the button now checked?
@@ -124,7 +124,7 @@ public class MainActivity extends AppCompatActivity {
 
     /**
      * Prepare data for the Line Chart
-     * @param days - Number of Jimdo day usage statistics
+     * @param days Number of Jimdo day usage statistics
      * @return LineChartPresentation object for Line Chart initialization
      */
     private LineChartPresentation prepareData(int days) {
@@ -157,9 +157,9 @@ public class MainActivity extends AppCompatActivity {
 
     /**
      * Sets data from mockSatats to the given LineChartPresentation instance
-     * @param lcp - LineChartPresentation instance
-     * @param days - overall days to be set in the LineChartPresentation
-     * @param day - for which day should the data be set
+     * @param lcp LineChartPresentation instance
+     * @param days overall days to be set in the LineChartPresentation
+     * @param day for which day should the data be set
      */
     private void setDayStatisticsToPresentation(LineChartPresentation lcp, int days, int day) {
         JimdoPerDayStatistics stat = mockSatats.get(day);
@@ -185,7 +185,7 @@ public class MainActivity extends AppCompatActivity {
 
     /**
      * Inflates Line Chart with data, initializes the look and feel, shows the Line Chart.
-     * @param lcp - LineChartPresentation instance.
+     * @param lcp LineChartPresentation instance.
      */
     private void inflateChart(LineChartPresentation lcp) {
 
