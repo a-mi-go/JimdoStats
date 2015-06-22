@@ -25,18 +25,14 @@ import com.db.chart.view.animation.easing.BaseEasingMethod;
 import com.db.chart.view.animation.easing.quint.QuintEaseOut;
 
 import java.text.DecimalFormat;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Date;
 import java.util.List;
-import java.util.Random;
 
 
 public class MainActivity extends AppCompatActivity {
 
     private static final int WEEK_DAYS = 7;
     private static final int MONTH_DAYS = 30;
-    private static final long MILLISECONDS_IN_DAY = 86400000;
+
 
     private List<JimdoPerDayStatistics> mockSatats;
     private LineChartPresentation weekLineChartPresentation;
@@ -49,7 +45,6 @@ public class MainActivity extends AppCompatActivity {
     private LineChartView mLineChart;
     private RadioGroup mRadioGroup;
     private Handler mHandler;
-
 
     /**
      * inflate and redraw chart in separate thread
@@ -86,7 +81,6 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -98,7 +92,7 @@ public class MainActivity extends AppCompatActivity {
         mHandler = new Handler();
 
         //prepare the data here to avoid unnecessary overhead while switching views
-        mockSatats = generateMockStats(MONTH_DAYS);
+        mockSatats = JimdoStatisticsMockDataProvider.generateMockStats(MONTH_DAYS);
         weekLineChartPresentation = prepareData(WEEK_DAYS);
         monthLineChartPresentation = prepareData(MONTH_DAYS);
 
@@ -189,7 +183,6 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-
     /**
      * Inflates Line Chart with data, initializes the look and feel, shows the Line Chart.
      * @param lcp - LineChartPresentation instance.
@@ -247,53 +240,6 @@ public class MainActivity extends AppCompatActivity {
         Animation animation = new Animation().setEasing(mCurrEasing);
         mLineChart.show(animation.setEndAction(mEnterEndAction));
     }
-
-
-    /**
-     * Generates a list with random Jimdo Website statistics.
-     * @param numberOfDays - Number of Jimdo day usage statistics
-     * @return generated list of JimdoPerDayStatistics
-     */
-    private List<JimdoPerDayStatistics> generateMockStats(int numberOfDays) {
-
-        List<JimdoPerDayStatistics> mockStats = new ArrayList<>();
-
-        String[] referer = {"www.google.com","www.yandex.ru","","www.altavista.com"};
-        String[] pages = {"test1.jimdo.com","test2.jimdo.com","test3.jimdo.com"};
-        String[] devices = {"android","iphone","pc"};
-        String[] os = {"Windows","Linux","MacOS", "iOS", "Android"};
-
-        Random rand = new Random();
-        //go back in time for the "numberOfDays"
-        long dayTime = Calendar.getInstance().getTimeInMillis() - (MILLISECONDS_IN_DAY*numberOfDays);
-        for (int day = 0; day < numberOfDays; day++) {
-            JimdoPerDayStatistics dayStat = new JimdoPerDayStatistics();
-            int uniqueVisits = rand.nextInt(20);
-            int pageViews = rand.nextInt(3)+1; //1 to 4 pageviews per visit
-
-            for (int v = 0; v < uniqueVisits; v++) {
-                Visit visit = new Visit();
-                for (int p = 0; p < pageViews; p++) {
-                    PageView pageView = new PageView();
-                    pageView.setPage(pages[rand.nextInt(2)]);
-                    pageView.setTimeSpentOnPage(rand.nextInt(100000));
-                    visit.addPageView(pageView);
-                }
-                visit.setReferer(referer[rand.nextInt(2)]);
-                visit.setDevice(devices[rand.nextInt(2)]);
-                visit.setOS(os[rand.nextInt(4)]);
-                dayStat.addVisit(visit);
-            }
-            dayStat.setDate(new Date(dayTime));
-            //back to the future
-            dayTime = dayTime + MILLISECONDS_IN_DAY;
-
-            mockStats.add(dayStat);
-        }
-
-        return mockStats;
-    }
-
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
