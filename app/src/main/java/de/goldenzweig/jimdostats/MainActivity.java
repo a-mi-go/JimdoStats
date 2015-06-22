@@ -35,7 +35,6 @@ public class MainActivity extends AppCompatActivity {
     private static final int WEEK_DAYS = 7;
     private static final int MONTH_DAYS = 30;
 
-
     private List<JimdoPerDayStatistics> mockSatats;
     private LineChartPresentation weekLineChartPresentation;
     private LineChartPresentation monthLineChartPresentation;
@@ -49,7 +48,7 @@ public class MainActivity extends AppCompatActivity {
     private Handler mHandler;
 
     /**
-     * inflate and redraw chart in separate thread
+     * Inflates and redraws line chart in separate thread
      */
     private final Runnable mInflateChartThread = new Runnable() {
         @Override
@@ -63,7 +62,7 @@ public class MainActivity extends AppCompatActivity {
     };
 
     /**
-     * enable radioGroup after chart animation is finished
+     * Enables radioGroup after chart animation is finished
      */
     private final Runnable mEnterEndAction = new Runnable() {
         @Override
@@ -73,7 +72,7 @@ public class MainActivity extends AppCompatActivity {
     };
 
     /**
-     * enables or disables all radioButtons in the group
+     * Enables or disables all radioButtons in the group
      */
     private void setRadioGroupEnabled(boolean enabled) {
         if (mRadioGroup != null) {
@@ -104,7 +103,8 @@ public class MainActivity extends AppCompatActivity {
     /**
      * RadioButton Group onClick listener.
      * Inflates the Line chart respectfully to the clicked RadioButton
-     * @param view clicked RadioButton
+     *
+     * @param view Clicked RadioButton
      */
     public void onRadioButtonClicked(View view) {
         // Is the button now checked?
@@ -126,6 +126,7 @@ public class MainActivity extends AppCompatActivity {
 
     /**
      * Prepare data for the Line Chart
+     *
      * @param days Number of Jimdo day usage statistics
      * @return LineChartPresentation object for Line Chart initialization
      */
@@ -145,7 +146,7 @@ public class MainActivity extends AppCompatActivity {
         lcp.pageViewsArray[0] = 0f;
         lcp.datesArray[0] = "";
 
-        for (int i = 0; i < days; i++) {
+        for (int i = 1; i <= days; i++) {
             setDayStatisticsToPresentation(lcp, days, i);
         }
 
@@ -159,34 +160,41 @@ public class MainActivity extends AppCompatActivity {
 
     /**
      * Sets data from mockSatats to the given LineChartPresentation instance
+     * used by {@link #prepareLineChartData} method
+     *
      * @param lcp LineChartPresentation instance
-     * @param days overall days to be set in the LineChartPresentation
-     * @param day for which day should the data be set
+     * @param days Overall days to be set in the LineChartPresentation
+     * @param day For which day should the data be set. Value of this param may vary from 1 to n.
      */
     private void setDayStatisticsToPresentation(LineChartPresentation lcp, int days, int day) {
-        JimdoPerDayStatistics stat = mockSatats.get(day);
+
+        // retrieve the mock stats starting from index 0
+        JimdoPerDayStatistics stat = mockSatats.get(day - 1);
+
         int visits = stat.getVisitCount();
         int pageViews = stat.getPageViewCount();
 
+        // update the maxValue of the LineChartPresentation
         if (visits > lcp.maxValue || pageViews > lcp.maxValue) {
             lcp.maxValue = Math.max(visits, pageViews);
         }
 
-        lcp.visitsArray[day + 1] = visits;
-        lcp.pageViewsArray[day + 1] = pageViews;
+        lcp.visitsArray[day] = visits;
+        lcp.pageViewsArray[day] = pageViews;
 
         // in month view add only every 4th date to avoid overfilling thy x-axis
         if (days == WEEK_DAYS) {
-            lcp.datesArray[day + 1] = stat.getShortDate();
+            lcp.datesArray[day] = stat.getShortDate();
         } else if ((day % 4) == 0) {
-            lcp.datesArray[day + 1] = stat.getShortDate();
+            lcp.datesArray[day] = stat.getShortDate();
         } else {
-            lcp.datesArray[day + 1] = "";
+            lcp.datesArray[day] = "";
         }
     }
 
     /**
      * Inflates Line Chart with data, initializes the look and feel, shows the Line Chart.
+     *
      * @param lcp LineChartPresentation instance.
      */
     private void inflateLineChart(LineChartPresentation lcp) {
