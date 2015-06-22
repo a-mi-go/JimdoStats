@@ -1,3 +1,7 @@
+/*
+ * Copyright (C) 2015 Mikhail Goldenzweig
+ * MIT Licence
+ */
 package de.goldenzweig.jimdostats;
 
 import java.util.ArrayList;
@@ -6,16 +10,13 @@ import java.util.Date;
 import java.util.List;
 import java.util.Random;
 
-/**
- * Created by mihahh on 22.06.2015.
- */
 public class JimdoStatisticsMockDataProvider {
 
     private static final long MILLISECONDS_IN_DAY = 86400000;
 
     /**
      * Generates a list with random Jimdo Website statistics.
-     * @param numberOfDays - Number of Jimdo day usage statistics
+     * @param numberOfDays Number of Jimdo day usage statistics
      * @return generated list of JimdoPerDayStatistics
      */
     public static List<JimdoPerDayStatistics> generateMockStats(int numberOfDays) {
