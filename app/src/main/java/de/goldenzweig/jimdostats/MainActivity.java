@@ -114,15 +114,15 @@ public class MainActivity extends AppCompatActivity {
         // Is the button now checked?
         boolean checked = ((RadioButton) view).isChecked();
         // Check which radio button was clicked
-        switch(view.getId()) {
-            case R.id.radio_week:
-                if (checked)
+        if (checked) {
+            switch (view.getId()) {
+                case R.id.radio_week:
                     currentChartPresentation = weekLineChartPresentation;
                     break;
-            case R.id.radio_month:
-                if (checked)
+                case R.id.radio_month:
                     currentChartPresentation = monthLineChartPresentation;
-                break;
+                    break;
+            }
         }
         setRadioGroupEnabled(false);
         mInflateChartThread.run();
@@ -136,13 +136,13 @@ public class MainActivity extends AppCompatActivity {
     private LineChartPresentation prepareData(int days) {
 
         LineChartPresentation lcp = new LineChartPresentation();
-        //Max value of visits or page views in the stats
-        int maxValue = 0;
 
         //initialize the LineChartPresentation instance
         lcp.visitsArray = new float[days+1];
         lcp.pageViewsArray = new float[days+1];
         lcp.datesArray = new String[days+1];
+        //Max value of visits or page views in the stats
+        lcp.maxValue = 0;
 
         //first row is empty to avoid points being drawn directly on the y-axis
         lcp.visitsArray[0] = 0f;
@@ -150,34 +150,43 @@ public class MainActivity extends AppCompatActivity {
         lcp.datesArray[0] = "";
 
         for (int i = 0; i < days; i++) {
-
-            JimdoPerDayStatistics stat = mockSatats.get(i);
-            int visits = stat.getVisitCount();
-            int pageViews = stat.getPageViewCount();
-
-            if (visits > maxValue || pageViews > maxValue) {
-                maxValue = Math.max(visits, pageViews);
-            }
-
-            lcp.visitsArray[i+1] = visits;
-            lcp.pageViewsArray[i+1] = pageViews;
-
-            // in month view add only every 4th date to avoid overfilling thy x-axis
-            if (days == WEEK_DAYS) {
-                lcp.datesArray[i+1] = stat.getShortDate();
-            } else if ((i % 4) == 0) {
-                lcp.datesArray[i+1] = stat.getShortDate();
-            } else {
-                lcp.datesArray[i+1] = "";
-            }
+            setDayStatisticsToPresentation(lcp, days, i);
         }
 
         //Round maxValue up to the closest 10
-        lcp.maxValue = (int) Math.ceil(maxValue / 10d) * 10;
+        lcp.maxValue = (int) Math.ceil(lcp.maxValue / 10d) * 10;
         //Calculate step so that we always have exactly 10 segments on the y-axis
         lcp.step = (int) Math.floor(lcp.maxValue / 10);
 
         return lcp;
+    }
+
+    /**
+     * Sets data from mockSatats to the given LineChartPresentation instance
+     * @param lcp - LineChartPresentation instance
+     * @param days - overall days to be set in the LineChartPresentation
+     * @param day - for which day should the data be set
+     */
+    private void setDayStatisticsToPresentation(LineChartPresentation lcp, int days, int day) {
+        JimdoPerDayStatistics stat = mockSatats.get(day);
+        int visits = stat.getVisitCount();
+        int pageViews = stat.getPageViewCount();
+
+        if (visits > lcp.maxValue || pageViews > lcp.maxValue) {
+            lcp.maxValue = Math.max(visits, pageViews);
+        }
+
+        lcp.visitsArray[day+1] = visits;
+        lcp.pageViewsArray[day+1] = pageViews;
+
+        // in month view add only every 4th date to avoid overfilling thy x-axis
+        if (days == WEEK_DAYS) {
+            lcp.datesArray[day+1] = stat.getShortDate();
+        } else if ((day % 4) == 0) {
+            lcp.datesArray[day+1] = stat.getShortDate();
+        } else {
+            lcp.datesArray[day+1] = "";
+        }
     }
 
 
