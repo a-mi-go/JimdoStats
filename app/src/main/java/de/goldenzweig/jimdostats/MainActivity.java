@@ -56,7 +56,7 @@ public class MainActivity extends AppCompatActivity {
         public void run() {
             mHandler.postDelayed(new Runnable() {
                 public void run() {
-                    inflateChart(currentChartPresentation);
+                    inflateLineChart(currentChartPresentation);
                 }
             }, 50);
         }
@@ -95,10 +95,10 @@ public class MainActivity extends AppCompatActivity {
 
         //prepare the data here to avoid unnecessary overhead while switching views
         mockSatats = JimdoStatisticsMockDataProvider.generateMockStats(MONTH_DAYS);
-        weekLineChartPresentation = prepareData(WEEK_DAYS);
-        monthLineChartPresentation = prepareData(MONTH_DAYS);
+        weekLineChartPresentation = prepareLineChartData(WEEK_DAYS);
+        monthLineChartPresentation = prepareLineChartData(MONTH_DAYS);
 
-        inflateChart(weekLineChartPresentation);
+        inflateLineChart(weekLineChartPresentation);
     }
 
     /**
@@ -129,14 +129,14 @@ public class MainActivity extends AppCompatActivity {
      * @param days Number of Jimdo day usage statistics
      * @return LineChartPresentation object for Line Chart initialization
      */
-    private LineChartPresentation prepareData(int days) {
+    private LineChartPresentation prepareLineChartData(int days) {
 
         LineChartPresentation lcp = new LineChartPresentation();
 
         //initialize the LineChartPresentation instance
-        lcp.visitsArray = new float[days+1];
-        lcp.pageViewsArray = new float[days+1];
-        lcp.datesArray = new String[days+1];
+        lcp.visitsArray = new float[days + 1];
+        lcp.pageViewsArray = new float[days + 1];
+        lcp.datesArray = new String[days + 1];
         //Max value of visits or page views in the stats
         lcp.maxValue = 0;
 
@@ -172,16 +172,16 @@ public class MainActivity extends AppCompatActivity {
             lcp.maxValue = Math.max(visits, pageViews);
         }
 
-        lcp.visitsArray[day+1] = visits;
-        lcp.pageViewsArray[day+1] = pageViews;
+        lcp.visitsArray[day + 1] = visits;
+        lcp.pageViewsArray[day + 1] = pageViews;
 
         // in month view add only every 4th date to avoid overfilling thy x-axis
         if (days == WEEK_DAYS) {
-            lcp.datesArray[day+1] = stat.getShortDate();
+            lcp.datesArray[day + 1] = stat.getShortDate();
         } else if ((day % 4) == 0) {
-            lcp.datesArray[day+1] = stat.getShortDate();
+            lcp.datesArray[day + 1] = stat.getShortDate();
         } else {
-            lcp.datesArray[day+1] = "";
+            lcp.datesArray[day + 1] = "";
         }
     }
 
@@ -189,7 +189,7 @@ public class MainActivity extends AppCompatActivity {
      * Inflates Line Chart with data, initializes the look and feel, shows the Line Chart.
      * @param lcp LineChartPresentation instance.
      */
-    private void inflateChart(LineChartPresentation lcp) {
+    private void inflateLineChart(LineChartPresentation lcp) {
 
         mLineChart.reset();
 
@@ -243,6 +243,9 @@ public class MainActivity extends AppCompatActivity {
         mLineChart.show(animation.setEndAction(mEnterEndAction));
     }
 
+    /**
+     * TODO: show top viewed pages for selected time period in a separate activity or popup window
+     */
     public void onTopPagesButtonClicked(View view) {
         Toast toast = Toast.makeText(getApplicationContext(),
                 "This feature is not implemented yet",
@@ -251,6 +254,9 @@ public class MainActivity extends AppCompatActivity {
         toast.show();
     }
 
+    /**
+     * TODO: show top referer pages for selected time period in a separate activity or popup window
+     */
     public void onTopRefererButtonClicked(View view) {
         Toast toast = Toast.makeText(getApplicationContext(),
                 "This feature is not implemented yet",
@@ -259,6 +265,9 @@ public class MainActivity extends AppCompatActivity {
         toast.show();
     }
 
+    /**
+     * TODO: show top devices (for e.g. as pie chart) used for viewing pages
+     */
     public void onTopDevicesButtonClicked(View view) {
         Toast toast = Toast.makeText(getApplicationContext(),
                 "This feature is not implemented yet",
