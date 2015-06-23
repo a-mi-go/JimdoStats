@@ -7,6 +7,7 @@ package de.goldenzweig.jimdostats;
 import android.graphics.DashPathEffect;
 import android.graphics.Paint;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
 import android.view.Gravity;
 import android.view.Menu;
@@ -44,6 +45,7 @@ public class MainActivity extends AppCompatActivity {
 
     private LineChartView mLineChart;
     private RadioGroup mRadioGroup;
+    private Handler mHandler;
 
     /**
      * Inflates and redraws line chart in separate thread.
@@ -51,7 +53,11 @@ public class MainActivity extends AppCompatActivity {
     private final Runnable mInflateChartThread = new Runnable() {
         @Override
         public void run() {
-            inflateLineChart(mCurrentChartPresentation);
+            mHandler.postDelayed(new Runnable() {
+                public void run() {
+                    inflateLineChart(mCurrentChartPresentation);
+                }
+            }, 100);
         }
     };
 
@@ -83,6 +89,7 @@ public class MainActivity extends AppCompatActivity {
 
         mLineChart = (LineChartView) findViewById(R.id.linechart);
         mRadioGroup = (RadioGroup) findViewById(R.id.radio_group);
+        mHandler = new Handler();
 
         //prepare the data here to avoid unnecessary overhead while switching views
         mMockStats = JimdoStatisticsMockDataProvider.generateMockStats(MONTH_DAYS);
