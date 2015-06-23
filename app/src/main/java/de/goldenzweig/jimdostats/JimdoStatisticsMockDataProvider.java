@@ -10,7 +10,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Random;
 
-public class JimdoStatisticsMockDataProvider {
+class JimdoStatisticsMockDataProvider {
 
     private static final long MILLISECONDS_IN_DAY = 86400000;
 

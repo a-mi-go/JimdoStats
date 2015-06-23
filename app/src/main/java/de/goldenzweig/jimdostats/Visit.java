@@ -7,7 +7,7 @@ package de.goldenzweig.jimdostats;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Visit {
+class Visit {
 
     private List<PageView> pageViews;
 

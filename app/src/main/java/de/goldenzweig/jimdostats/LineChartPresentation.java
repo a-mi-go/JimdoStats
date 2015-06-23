@@ -4,7 +4,7 @@
  */
 package de.goldenzweig.jimdostats;
 
-public class LineChartPresentation {
+class LineChartPresentation {
 
     public float[] visitsArray;
     public float[] pageViewsArray;

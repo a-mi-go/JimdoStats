@@ -6,7 +6,7 @@ package de.goldenzweig.jimdostats;
 
 import java.util.List;
 
-public interface IJimdoPerDayStatistics {
+interface IJimdoPerDayStatistics {
 
     /**
      * @return Unique {@link Visit}s for a website on a given date

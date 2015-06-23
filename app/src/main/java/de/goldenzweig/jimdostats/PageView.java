@@ -4,7 +4,7 @@
  */
 package de.goldenzweig.jimdostats;
 
-public class PageView {
+class PageView {
 
     private String page;
     private long timeSpentOnPage;

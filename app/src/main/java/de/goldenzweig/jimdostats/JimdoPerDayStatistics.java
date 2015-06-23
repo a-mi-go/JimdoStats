@@ -9,7 +9,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-public class JimdoPerDayStatistics implements IJimdoPerDayStatistics {
+class JimdoPerDayStatistics implements IJimdoPerDayStatistics {
 
     private List<Visit> visits;
     private Date date;
