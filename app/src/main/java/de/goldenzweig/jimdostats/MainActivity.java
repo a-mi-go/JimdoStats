@@ -7,7 +7,6 @@ package de.goldenzweig.jimdostats;
 import android.graphics.DashPathEffect;
 import android.graphics.Paint;
 import android.os.Bundle;
-import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
 import android.view.Gravity;
 import android.view.Menu;
@@ -35,36 +34,31 @@ public class MainActivity extends AppCompatActivity {
     private static final int WEEK_DAYS = 7;
     private static final int MONTH_DAYS = 30;
 
-    private List<JimdoPerDayStatistics> mockSatats;
-    private LineChartPresentation weekLineChartPresentation;
-    private LineChartPresentation monthLineChartPresentation;
-    private LineChartPresentation currentChartPresentation;
+    private List<JimdoPerDayStatistics> mMockStats;
+    private LineChartPresentation mWeekLineChartPresentation;
+    private LineChartPresentation mMonthLineChartPresentation;
+    private LineChartPresentation mCurrentChartPresentation;
 
     //Animation Style
-    private static BaseEasingMethod mCurrEasing = new QuintEaseOut();
+    private BaseEasingMethod mCurrEasing = new QuintEaseOut();
 
     private LineChartView mLineChart;
     private RadioGroup mRadioGroup;
-    private Handler mHandler;
 
     /**
-     * Inflates and redraws line chart in separate thread
+     * Inflates and redraws line chart in separate thread.
      */
     private final Runnable mInflateChartThread = new Runnable() {
         @Override
         public void run() {
-            mHandler.postDelayed(new Runnable() {
-                public void run() {
-                    inflateLineChart(currentChartPresentation);
-                }
-            }, 50);
+            inflateLineChart(mCurrentChartPresentation);
         }
     };
 
     /**
-     * Enables radioGroup after chart animation is finished
+     * Enables radioGroup after chart animation is finished.
      */
-    private final Runnable mEnterEndAction = new Runnable() {
+    private final Runnable mAnimationEndAction = new Runnable() {
         @Override
         public void run() {
             setRadioGroupEnabled(true);
@@ -72,7 +66,7 @@ public class MainActivity extends AppCompatActivity {
     };
 
     /**
-     * Enables or disables all radioButtons in the group
+     * Enables or disables all radioButtons in the radio group.
      */
     private void setRadioGroupEnabled(boolean enabled) {
         if (mRadioGroup != null) {
@@ -90,19 +84,17 @@ public class MainActivity extends AppCompatActivity {
         mLineChart = (LineChartView) findViewById(R.id.linechart);
         mRadioGroup = (RadioGroup) findViewById(R.id.radio_group);
 
-        mHandler = new Handler();
-
         //prepare the data here to avoid unnecessary overhead while switching views
-        mockSatats = JimdoStatisticsMockDataProvider.generateMockStats(MONTH_DAYS);
-        weekLineChartPresentation = prepareLineChartData(WEEK_DAYS);
-        monthLineChartPresentation = prepareLineChartData(MONTH_DAYS);
+        mMockStats = JimdoStatisticsMockDataProvider.generateMockStats(MONTH_DAYS);
+        mWeekLineChartPresentation = prepareLineChartData(WEEK_DAYS);
+        mMonthLineChartPresentation = prepareLineChartData(MONTH_DAYS);
 
-        inflateLineChart(weekLineChartPresentation);
+        inflateLineChart(mWeekLineChartPresentation);
     }
 
     /**
      * RadioButton Group onClick listener.
-     * Inflates the Line chart respectfully to the clicked RadioButton
+     * Inflates the Line chart respectfully to the clicked RadioButton.
      *
      * @param view Clicked RadioButton
      */
@@ -113,10 +105,10 @@ public class MainActivity extends AppCompatActivity {
         if (checked) {
             switch (view.getId()) {
                 case R.id.radio_week:
-                    currentChartPresentation = weekLineChartPresentation;
+                    mCurrentChartPresentation = mWeekLineChartPresentation;
                     break;
                 case R.id.radio_month:
-                    currentChartPresentation = monthLineChartPresentation;
+                    mCurrentChartPresentation = mMonthLineChartPresentation;
                     break;
             }
         }
@@ -125,7 +117,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     /**
-     * Prepare data for the Line Chart
+     * Prepare data for the Line Chart.
      *
      * @param days Number of Jimdo day usage statistics
      * @return {@link LineChartPresentation} object for Line Chart initialization
@@ -159,9 +151,9 @@ public class MainActivity extends AppCompatActivity {
     }
 
     /**
-     * Sets data from mockSatats to the given {@link LineChartPresentation} instance
-     * for a specified day
-     * used by {@link #prepareLineChartData} method
+     * Sets data from mMockStats to the given {@link LineChartPresentation} instance
+     * for a specified day.
+     * used by {@link #prepareLineChartData} method.
      *
      * @param lcp {@link LineChartPresentation} instance
      * @param days Overall days to be set in the lcp ({@link LineChartPresentation})
@@ -170,7 +162,7 @@ public class MainActivity extends AppCompatActivity {
     private void setDayStatisticsToPresentation(LineChartPresentation lcp, int days, int day) {
 
         // retrieve the mock stats starting from index 0
-        JimdoPerDayStatistics stat = mockSatats.get(day - 1);
+        JimdoPerDayStatistics stat = mMockStats.get(day - 1);
 
         int visits = stat.getVisitCount();
         int pageViews = stat.getPageViewCount();
@@ -196,7 +188,7 @@ public class MainActivity extends AppCompatActivity {
     /**
      * Inflates Line Chart with data, initializes the look and feel, shows the Line Chart.
      *
-     * @param lcp {@link LineChartPresentation} instance.
+     * @param lcp {@link LineChartPresentation} instance
      */
     private void inflateLineChart(LineChartPresentation lcp) {
 
@@ -249,7 +241,7 @@ public class MainActivity extends AppCompatActivity {
                 .setLabelsFormat(new DecimalFormat("##"));
 
         Animation animation = new Animation().setEasing(mCurrEasing);
-        mLineChart.show(animation.setEndAction(mEnterEndAction));
+        mLineChart.show(animation.setEndAction(mAnimationEndAction));
     }
 
     /**
