@@ -2,12 +2,12 @@
  * Copyright (C) 2015 Mikhail Goldenzweig
  * MIT Licence
  */
-package de.goldenzweig.jimdostats;
+package de.goldenzweig.jimdostats.model;
 
 import java.util.ArrayList;
 import java.util.List;
 
-class Visit {
+public class Visit {
 
     private List<PageView> pageViews;
 
@@ -95,5 +95,16 @@ class Visit {
      */
     public void setOS(String os) {
         this.os = os;
+    }
+
+    @Override
+    public String toString() {
+        return "Visit{" +
+                "pageViews=" + pageViews +
+                ", referer='" + referer + '\'' +
+                ", userAgent='" + userAgent + '\'' +
+                ", device='" + device + '\'' +
+                ", os='" + os + '\'' +
+                '}';
     }
 }

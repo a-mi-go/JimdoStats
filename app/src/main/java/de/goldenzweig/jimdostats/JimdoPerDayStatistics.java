@@ -9,6 +9,8 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+import de.goldenzweig.jimdostats.model.Visit;
+
 class JimdoPerDayStatistics implements IJimdoPerDayStatistics {
 
     private List<Visit> visits;
