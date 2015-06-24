@@ -4,17 +4,27 @@
  */
 package de.goldenzweig.jimdostats;
 
+import android.graphics.Color;
 import android.graphics.DashPathEffect;
 import android.graphics.Paint;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
+import android.text.Html;
+import android.util.DisplayMetrics;
+import android.view.GestureDetector;
 import android.view.Gravity;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewGroup.LayoutParams;
+import android.widget.LinearLayout;
+import android.widget.PopupWindow;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.db.chart.Tools;
@@ -26,25 +36,46 @@ import com.db.chart.view.animation.Animation;
 import com.db.chart.view.animation.easing.BaseEasingMethod;
 import com.db.chart.view.animation.easing.quint.QuintEaseOut;
 
+import org.eazegraph.lib.charts.PieChart;
+import org.eazegraph.lib.models.PieModel;
+
 import java.text.DecimalFormat;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+
+import de.goldenzweig.jimdostats.model.Device;
+import de.goldenzweig.jimdostats.model.Visit;
+import de.goldenzweig.jimdostats.presentation.LineChartPresentation;
+import de.goldenzweig.jimdostats.presentation.PieChartPresentation;
 
 
 public class MainActivity extends AppCompatActivity {
 
+    //Constants
     private static final int WEEK_DAYS = 7;
     private static final int MONTH_DAYS = 30;
+    private static final int SWIPE_MIN_DISTANCE = 120;
+    private static final int SWIPE_THRESHOLD_VELOCITY = 200;
 
+    //Data
     private List<JimdoPerDayStatistics> mMockStats;
     private LineChartPresentation mWeekLineChartPresentation;
     private LineChartPresentation mMonthLineChartPresentation;
-    private LineChartPresentation mCurrentChartPresentation;
+    private LineChartPresentation mCurrentLineChartPresentation;
+    private PieChartPresentation mWeekDevicesPieChartPresentation;
+    private PieChartPresentation mMonthDevicesPieChartPresentation;
 
     //Animation Style
     private BaseEasingMethod mCurrEasing = new QuintEaseOut();
 
+    //Views
     private LineChartView mLineChart;
     private RadioGroup mRadioGroup;
+    private RadioButton mRadioWeek;
+    private RadioButton mRadioMonth;
+    private PopupWindow mPopupWindow;
+
     private Handler mHandler;
 
     /**
@@ -55,7 +86,7 @@ public class MainActivity extends AppCompatActivity {
         public void run() {
             mHandler.postDelayed(new Runnable() {
                 public void run() {
-                    inflateLineChart(mCurrentChartPresentation);
+                    inflateLineChart(mCurrentLineChartPresentation);
                 }
             }, 100);
         }
@@ -89,14 +120,86 @@ public class MainActivity extends AppCompatActivity {
 
         mLineChart = (LineChartView) findViewById(R.id.linechart);
         mRadioGroup = (RadioGroup) findViewById(R.id.radio_group);
+        mRadioWeek = (RadioButton) findViewById(R.id.radio_week);
+        mRadioMonth = (RadioButton) findViewById(R.id.radio_month);
         mHandler = new Handler();
 
         //prepare the data here to avoid unnecessary overhead while switching views
         mMockStats = JimdoStatisticsMockDataProvider.generateMockStats(MONTH_DAYS);
         mWeekLineChartPresentation = prepareLineChartData(WEEK_DAYS);
         mMonthLineChartPresentation = prepareLineChartData(MONTH_DAYS);
+        mCurrentLineChartPresentation = mWeekLineChartPresentation;
 
-        inflateLineChart(mWeekLineChartPresentation);
+        mWeekDevicesPieChartPresentation = prepareDevicesPieChartData(WEEK_DAYS);
+        mMonthDevicesPieChartPresentation = prepareDevicesPieChartData(MONTH_DAYS);
+
+        //set fling listner on the line chart
+        final GestureDetector gdt = new GestureDetector(this, new HorizontalFlingListner());
+        final LineChartView lineChart = (LineChartView) findViewById(R.id.linechart);
+        lineChart.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(final View view, final MotionEvent event) {
+                gdt.onTouchEvent(event);
+                return true;
+            }
+        });
+
+        //inflate chart in onResume()
+    }
+
+    private class HorizontalFlingListner implements GestureDetector.OnGestureListener {
+
+        @Override
+        public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
+            // Right to left
+            if(e1.getX() - e2.getX() > SWIPE_MIN_DISTANCE && Math.abs(velocityX) > SWIPE_THRESHOLD_VELOCITY) {
+                if (mRadioMonth.isChecked() && mRadioMonth.isEnabled()) {
+                    mRadioWeek.setChecked(true);
+                    switchToWeekLineChartVew();
+
+                }
+                return false;
+                // Left to right
+            }  else if (e2.getX() - e1.getX() > SWIPE_MIN_DISTANCE && Math.abs(velocityX) > SWIPE_THRESHOLD_VELOCITY) {
+                if (mRadioWeek.isChecked() && mRadioWeek.isEnabled()) {
+                    mRadioMonth.setChecked(true);
+                    switchToMonthLineChartVew();
+                }
+                return false;
+            }
+            return false;
+        }
+        //Methods not used but have to be implemented
+        @Override public boolean onDown(MotionEvent e) { return false; }
+        @Override public void onShowPress(MotionEvent e) {}
+        @Override public boolean onSingleTapUp(MotionEvent e) { return false; }
+        @Override public boolean onScroll(MotionEvent e1, MotionEvent e2, float distanceX, float distanceY) { return false; }
+        @Override public void onLongPress(MotionEvent e) {}
+    }
+
+    /**
+     * Switch to month view on the line chart
+     */
+    private void switchToMonthLineChartVew() {
+        mCurrentLineChartPresentation = mMonthLineChartPresentation;
+        switchLineChartView();
+    }
+
+    /**
+     * Switch to week view on the line chart
+     */
+    private void switchToWeekLineChartVew() {
+        mCurrentLineChartPresentation = mWeekLineChartPresentation;
+        switchLineChartView();
+
+    }
+
+    /**
+     * Switch view on the line chart
+     */
+    private void switchLineChartView() {
+        setRadioGroupEnabled(false);
+        inflateAllCharts();
     }
 
     /**
@@ -112,15 +215,13 @@ public class MainActivity extends AppCompatActivity {
         if (checked) {
             switch (view.getId()) {
                 case R.id.radio_week:
-                    mCurrentChartPresentation = mWeekLineChartPresentation;
+                    switchToWeekLineChartVew();
                     break;
                 case R.id.radio_month:
-                    mCurrentChartPresentation = mMonthLineChartPresentation;
+                    switchToMonthLineChartVew();
                     break;
             }
         }
-        setRadioGroupEnabled(false);
-        mInflateChartThread.run();
     }
 
     /**
@@ -141,8 +242,6 @@ public class MainActivity extends AppCompatActivity {
         lcp.maxValue = 0;
 
         //first row is empty to avoid points being drawn directly on the y-axis
-        lcp.visitsArray[0] = 0f;
-        lcp.pageViewsArray[0] = 0f;
         lcp.datesArray[0] = "";
 
         for (int i = 1; i <= days; i++) {
@@ -158,13 +257,58 @@ public class MainActivity extends AppCompatActivity {
     }
 
     /**
+     * Prepare data for the devices Pie Chart.
+     *
+     * @param days umber of Jimdo day usage statistics
+     * @return {@link PieChartPresentation} object for Pie Chart initialization
+     */
+    private PieChartPresentation prepareDevicesPieChartData(int days) {
+
+        //TODO: add more colors for more devices
+        String[] colors = {"#FE6DA8", "#56B7F1", "#FED70E", "#CDA67F"};
+        PieChartPresentation pieChartPresentation = new PieChartPresentation();
+
+        int differentDevices = 0;
+        int overallDevices = 0;
+
+        //generate map of devices names on device model instances
+        Map<String, Device> devicesMap = new HashMap<>();
+
+        for (int day = 0; day < days; day++) {
+            JimdoPerDayStatistics dayStat = mMockStats.get(day);
+            for (Visit visit: dayStat.getVisits()) {
+                String deviceName = visit.getDevice();
+                if (devicesMap.containsKey(deviceName)) {
+                    devicesMap.get(deviceName).incCount(); //count++
+                    overallDevices++;
+                } else {
+                    overallDevices++;
+                    Device device = new Device();
+                    device.setName(deviceName);
+                    device.setColor(colors[differentDevices++]);
+                    device.setCount(1);
+                    devicesMap.put(deviceName, device);
+                }
+            }
+        }
+        //calculate and set usage percent for each device
+        for (String device : devicesMap.keySet()) {
+            Device dp = devicesMap.get(device);
+            dp.setPercent((dp.getCount() * 100) / overallDevices);
+        }
+
+        pieChartPresentation.devices = devicesMap;
+        return pieChartPresentation;
+    }
+
+    /**
      * Sets data from mMockStats to the given {@link LineChartPresentation} instance
      * for a specified day.
      * used by {@link #prepareLineChartData} method.
      *
-     * @param lcp {@link LineChartPresentation} instance
+     * @param lcp  {@link LineChartPresentation} instance
      * @param days Overall days to be set in the lcp ({@link LineChartPresentation})
-     * @param day For which day should the data be set. Value of this param may vary from 1 to n.
+     * @param day  For which day should the data be set. Value of this param may vary from 1 to n.
      */
     private void setDayStatisticsToPresentation(LineChartPresentation lcp, int days, int day) {
 
@@ -189,6 +333,16 @@ public class MainActivity extends AppCompatActivity {
             lcp.datesArray[day] = stat.getShortDate();
         } else {
             lcp.datesArray[day] = "";
+        }
+    }
+
+    /**
+     *  Inflates the Line Chart and every other chart that should be shown
+     */
+    private void inflateAllCharts() {
+        mInflateChartThread.run();
+        if (mPopupWindow != null && mPopupWindow.isShowing()) {
+            inflateDevicesPieChartPopup();
         }
     }
 
@@ -251,6 +405,12 @@ public class MainActivity extends AppCompatActivity {
         mLineChart.show(animation.setEndAction(mAnimationEndAction));
     }
 
+    @Override
+    public void onResume() {
+        super.onResume();
+        inflateAllCharts();
+    }
+
     /**
      * TODO: show top viewed pages for selected time period in a separate activity or popup window
      */
@@ -277,11 +437,82 @@ public class MainActivity extends AppCompatActivity {
      * TODO: show top devices (for e.g. as pie chart) used for viewing pages
      */
     public void onTopDevicesButtonClicked(View view) {
-        Toast toast = Toast.makeText(getApplicationContext(),
-                "This feature is not implemented yet",
-                Toast.LENGTH_SHORT);
-        toast.setGravity(Gravity.CENTER, 0, 0);
-        toast.show();
+
+        //create and show a popup window
+        LayoutInflater layoutInflater
+                = (LayoutInflater) getBaseContext()
+                .getSystemService(LAYOUT_INFLATER_SERVICE);
+
+        View popupView = layoutInflater.inflate(R.layout.devices_pie_chart, null);
+
+        DisplayMetrics displayMetrics = new DisplayMetrics();
+        MainActivity.this.getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
+
+        mPopupWindow = new PopupWindow(
+                popupView,
+                displayMetrics.widthPixels - 10,
+                displayMetrics.heightPixels - 130);
+
+        LinearLayout mainLayout = new LinearLayout(this);
+        mPopupWindow.showAtLocation(mainLayout, Gravity.CENTER, 0, 0);
+
+        inflateDevicesPieChartPopup();
+    }
+
+    /**
+     * Inflates Pie Chart Popup window with devices usage statistics.
+     */
+    private void inflateDevicesPieChartPopup() {
+
+        View popupView = mPopupWindow.getContentView();
+        PieChart pieChart = (PieChart) popupView.findViewById(R.id.pie_chart);
+        LinearLayout devicesAgenda = (LinearLayout) popupView.findViewById(R.id.devices_agenda);
+
+        //cleanups
+        pieChart.clearChart();
+        devicesAgenda.removeAllViews();
+
+        //layout for the TextViews in agenda
+        LayoutParams lparams = new LayoutParams(
+                LayoutParams.WRAP_CONTENT,
+                LayoutParams.WRAP_CONTENT);
+
+        //Choose devicePieChartPresentation
+        PieChartPresentation pieChartPresentation;
+        int datesShownInLineChart = mCurrentLineChartPresentation.datesArray.length - 1;
+        if (WEEK_DAYS == datesShownInLineChart) {
+            pieChartPresentation = mWeekDevicesPieChartPresentation;
+        } else if (MONTH_DAYS == datesShownInLineChart) {
+            pieChartPresentation = mMonthDevicesPieChartPresentation;
+        } else {
+            pieChartPresentation = prepareDevicesPieChartData(datesShownInLineChart);
+        }
+
+        //Add slices to the pie chart and inflate the devices agenda
+        for (String device : pieChartPresentation.devices.keySet()) {
+            Device dp = pieChartPresentation.devices.get(device);
+            pieChart.addPieSlice(
+                    new PieModel(device, dp.getCount(), Color.parseColor(dp.getColor())));
+
+            TextView tv = new TextView(this);
+            tv.setLayoutParams(lparams);
+            String text = "<font color=" + dp.getColor() + ">\u25A0</font> " +
+                    "<font color=#dddddd>" + device + " - " + dp.getCount() +
+                    " (" + dp.getPercent() + "%)" + "</font>";
+            tv.setText(Html.fromHtml(text));
+            devicesAgenda.addView(tv);
+        }
+
+        pieChart.startAnimation();
+    }
+
+    @Override
+    public void onBackPressed() {
+        if (mPopupWindow != null && mPopupWindow.isShowing()) {
+            mPopupWindow.dismiss();
+        } else {
+            super.onBackPressed();
+        }
     }
 
     @Override

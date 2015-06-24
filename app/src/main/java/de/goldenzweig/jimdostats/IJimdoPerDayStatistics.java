@@ -5,6 +5,7 @@
 package de.goldenzweig.jimdostats;
 
 import java.util.List;
+import de.goldenzweig.jimdostats.model.Visit;
 
 interface IJimdoPerDayStatistics {
 

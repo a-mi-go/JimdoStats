@@ -2,9 +2,9 @@
  * Copyright (C) 2015 Mikhail Goldenzweig
  * MIT Licence
  */
-package de.goldenzweig.jimdostats;
+package de.goldenzweig.jimdostats.model;
 
-class PageView {
+public class PageView {
 
     private String page;
     private long timeSpentOnPage;
@@ -35,5 +35,13 @@ class PageView {
      */
     public void setTimeSpentOnPage(long timeSpentOnPage) {
         this.timeSpentOnPage = timeSpentOnPage;
+    }
+
+    @Override
+    public String toString() {
+        return "PageView{" +
+                "page='" + page + '\'' +
+                ", timeSpentOnPage=" + timeSpentOnPage +
+                '}';
     }
 }
