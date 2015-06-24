@@ -434,7 +434,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     /**
-     * TODO: show top devices (for e.g. as pie chart) used for viewing pages
+     *  Shows devices statistics with a Pie Chart in a popup window.
      */
     public void onTopDevicesButtonClicked(View view) {
 
