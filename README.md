@@ -18,10 +18,11 @@ App utilizes following open source libraries:
 * Added backend with NanoHTTP Server to provide mock data as a RESTfull webservice
 * Consume service with google volley
 * JSON marshaling and unmarshaling
-* Save/Restore data in onSaveInstanceState
+* Save/Restore data in onSaveInstanceState/onRestoreInstanceState
 * Extracted DataManager Class to handle data transformations
 * 2-way fling listner
 * bugfixes in line chart presentation
+
 
 ###### Release notes 24.06.2015
 * Popup window with devices statistics and an animated PieChart!
