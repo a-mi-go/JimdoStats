@@ -2,21 +2,26 @@
  * Copyright (C) 2015 Mikhail Goldenzweig
  * MIT Licence
  */
-package de.goldenzweig.jimdostats;
+package de.goldenzweig.jimdostats.model;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-import de.goldenzweig.jimdostats.model.Visit;
+import de.goldenzweig.jimdostats.backend.IJimdoPerDayStatistics;
 
-class JimdoPerDayStatistics implements IJimdoPerDayStatistics {
+
+public class JimdoOneDayStatistics implements IJimdoPerDayStatistics {
 
     private List<Visit> visits;
     private Date date;
 
-    public JimdoPerDayStatistics() {
+    public JimdoOneDayStatistics() {
         visits = new ArrayList<>();
         date = new Date();
     }
@@ -64,5 +69,24 @@ class JimdoPerDayStatistics implements IJimdoPerDayStatistics {
      */
     public void setDate(Date date) {
         this.date = date;
+    }
+
+    @Override
+    public String toString() {
+        return "JimdoOneDayStatistics{" +
+                "visits=" + visits +
+                ", date=" + date +
+                '}';
+    }
+
+    public JSONObject toJSON() throws JSONException {
+        JSONObject json = new JSONObject();
+        JSONArray jsonVisits = new JSONArray();
+        for (Visit visit: visits) {
+            jsonVisits.put(visit.toJSON());
+        }
+        json.put("visits", jsonVisits);
+        json.put("date", getDate());
+        return json;
     }
 }

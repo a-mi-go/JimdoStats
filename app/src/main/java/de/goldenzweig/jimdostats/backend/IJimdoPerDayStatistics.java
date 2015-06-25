@@ -2,12 +2,13 @@
  * Copyright (C) 2015 Mikhail Goldenzweig
  * MIT Licence
  */
-package de.goldenzweig.jimdostats;
+package de.goldenzweig.jimdostats.backend;
 
 import java.util.List;
+
 import de.goldenzweig.jimdostats.model.Visit;
 
-interface IJimdoPerDayStatistics {
+public interface IJimdoPerDayStatistics {
 
     /**
      * @return Unique {@link Visit}s for a website on a given date

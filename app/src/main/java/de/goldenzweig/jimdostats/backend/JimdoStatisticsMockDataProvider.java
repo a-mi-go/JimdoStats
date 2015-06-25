@@ -2,7 +2,7 @@
  * Copyright (C) 2015 Mikhail Goldenzweig
  * MIT Licence
  */
-package de.goldenzweig.jimdostats;
+package de.goldenzweig.jimdostats.backend;
 
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -10,21 +10,23 @@ import java.util.Date;
 import java.util.List;
 import java.util.Random;
 
+import de.goldenzweig.jimdostats.model.JimdoOneDayStatistics;
 import de.goldenzweig.jimdostats.model.PageView;
 import de.goldenzweig.jimdostats.model.Visit;
 
-class JimdoStatisticsMockDataProvider {
+public class JimdoStatisticsMockDataProvider {
 
     private static final long MILLISECONDS_IN_DAY = 86400000;
 
     /**
-     * Generates a list with random Jimdo Website statistics.
-     * @param numberOfDays Number of Jimdo day usage statistics
-     * @return generated list of JimdoPerDayStatistics
+     * Generates a list of random Jimdo Website statistics.
+     *
+     * @param numberOfDays Number of {@link JimdoOneDayStatistics} to be generated
+     * @return generated list of {@link JimdoOneDayStatistics}
      */
-    public static List<JimdoPerDayStatistics> generateMockStats(int numberOfDays) {
+    public static List<JimdoOneDayStatistics> generateMockStats(int numberOfDays) {
 
-        List<JimdoPerDayStatistics> mockStats = new ArrayList<>();
+        List<JimdoOneDayStatistics> mockStats = new ArrayList<>();
 
         String[] referer = {"www.google.com", "www.yandex.ru", "www.altavista.com"};
         String[] pages = {"test1.jimdo.com", "test2.jimdo.com", "test3.jimdo.com"};
@@ -32,12 +34,12 @@ class JimdoStatisticsMockDataProvider {
         String[] os = {"Windows", "Linux", "MacOS", "iOS", "Android"};
 
         Random rand = new Random();
-        //go back in time for the "numberOfDays"
+        // Go back in time for the "numberOfDays"
         long dayTime = Calendar.getInstance().getTimeInMillis() - (MILLISECONDS_IN_DAY * numberOfDays);
 
         for (int day = 0; day < numberOfDays; day++) {
 
-            JimdoPerDayStatistics dayStat = new JimdoPerDayStatistics();
+            JimdoOneDayStatistics dayStat = new JimdoOneDayStatistics();
             int uniqueVisits = rand.nextInt(20);
             int pageViews = rand.nextInt(3) + 1; //1 to 4 pageviews per visit
 
@@ -57,7 +59,7 @@ class JimdoStatisticsMockDataProvider {
                 dayStat.addVisit(visit);
             }
             dayStat.setDate(new Date(dayTime));
-            //back to the future
+            // Back to the future
             dayTime = dayTime + MILLISECONDS_IN_DAY;
 
             mockStats.add(dayStat);

@@ -4,6 +4,9 @@
  */
 package de.goldenzweig.jimdostats.model;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 public class PageView {
 
     private String page;
@@ -43,5 +46,12 @@ public class PageView {
                 "page='" + page + '\'' +
                 ", timeSpentOnPage=" + timeSpentOnPage +
                 '}';
+    }
+
+    public JSONObject toJSON() throws JSONException {
+        JSONObject json = new JSONObject();
+        json.put("page", page);
+        json.put("timeSpentOnPage", timeSpentOnPage);
+        return json;
     }
 }

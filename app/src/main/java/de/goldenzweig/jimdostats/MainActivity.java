@@ -4,6 +4,7 @@
  */
 package de.goldenzweig.jimdostats;
 
+import android.app.ProgressDialog;
 import android.graphics.Color;
 import android.graphics.DashPathEffect;
 import android.graphics.Paint;
@@ -27,6 +28,11 @@ import android.widget.RadioGroup;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.android.volley.DefaultRetryPolicy;
+import com.android.volley.Request;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.JsonObjectRequest;
 import com.db.chart.Tools;
 import com.db.chart.model.LineSet;
 import com.db.chart.view.LineChartView;
@@ -38,14 +44,12 @@ import com.db.chart.view.animation.easing.quint.QuintEaseOut;
 
 import org.eazegraph.lib.charts.PieChart;
 import org.eazegraph.lib.models.PieModel;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.text.DecimalFormat;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 import de.goldenzweig.jimdostats.model.Device;
-import de.goldenzweig.jimdostats.model.Visit;
 import de.goldenzweig.jimdostats.presentation.LineChartPresentation;
 import de.goldenzweig.jimdostats.presentation.PieChartPresentation;
 
@@ -53,18 +57,11 @@ import de.goldenzweig.jimdostats.presentation.PieChartPresentation;
 public class MainActivity extends AppCompatActivity {
 
     //Constants
-    private static final int WEEK_DAYS = 7;
-    private static final int MONTH_DAYS = 30;
     private static final int SWIPE_MIN_DISTANCE = 120;
     private static final int SWIPE_THRESHOLD_VELOCITY = 200;
+    private static final int MY_SOCKET_TIMEOUT_MS = 10000;
 
-    //Data
-    private List<JimdoPerDayStatistics> mMockStats;
-    private LineChartPresentation mWeekLineChartPresentation;
-    private LineChartPresentation mMonthLineChartPresentation;
-    private LineChartPresentation mCurrentLineChartPresentation;
-    private PieChartPresentation mWeekDevicesPieChartPresentation;
-    private PieChartPresentation mMonthDevicesPieChartPresentation;
+    private static final String statisticsRequestURL = "http://localhost:8080/statistics";
 
     //Animation Style
     private BaseEasingMethod mCurrEasing = new QuintEaseOut();
@@ -75,8 +72,11 @@ public class MainActivity extends AppCompatActivity {
     private RadioButton mRadioWeek;
     private RadioButton mRadioMonth;
     private PopupWindow mPopupWindow;
+    private ProgressDialog mProgressDialog;
 
     private Handler mHandler;
+
+    private DataManager mDataManager;
 
     /**
      * Inflates and redraws line chart in separate thread.
@@ -86,7 +86,7 @@ public class MainActivity extends AppCompatActivity {
         public void run() {
             mHandler.postDelayed(new Runnable() {
                 public void run() {
-                    inflateLineChart(mCurrentLineChartPresentation);
+                    inflateLineChart(mDataManager.getCurrentLineChartPresentation());
                 }
             }, 100);
         }
@@ -118,20 +118,27 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        mDataManager = new DataManager();
+
+        //initialize UI
         mLineChart = (LineChartView) findViewById(R.id.linechart);
         mRadioGroup = (RadioGroup) findViewById(R.id.radio_group);
         mRadioWeek = (RadioButton) findViewById(R.id.radio_week);
         mRadioMonth = (RadioButton) findViewById(R.id.radio_month);
         mHandler = new Handler();
 
-        //prepare the data here to avoid unnecessary overhead while switching views
-        mMockStats = JimdoStatisticsMockDataProvider.generateMockStats(MONTH_DAYS);
-        mWeekLineChartPresentation = prepareLineChartData(WEEK_DAYS);
-        mMonthLineChartPresentation = prepareLineChartData(MONTH_DAYS);
-        mCurrentLineChartPresentation = mWeekLineChartPresentation;
+        mProgressDialog = new ProgressDialog(this);
+        mProgressDialog.setMessage("Please wait...");
+        mProgressDialog.setCancelable(false);
 
-        mWeekDevicesPieChartPresentation = prepareDevicesPieChartData(WEEK_DAYS);
-        mMonthDevicesPieChartPresentation = prepareDevicesPieChartData(MONTH_DAYS);
+        // if onCreate called for the first time
+        if (savedInstanceState == null) {
+            // request monthly statistics from server
+            requestJimdoPerDayStatistics();
+        } else {
+            // recover data from the bundle
+            mDataManager.recoverData(savedInstanceState.getString("jsonResponse"));
+        }
 
         //set fling listner on the line chart
         final GestureDetector gdt = new GestureDetector(this, new HorizontalFlingListner());
@@ -143,29 +150,80 @@ public class MainActivity extends AppCompatActivity {
                 return true;
             }
         });
-
-        //inflate chart in onResume()
     }
 
+    /**
+     * Request Jimdo website usage statistics from server using google volley library.
+     * Inflate and show data in the line chart.
+     */
+    private void requestJimdoPerDayStatistics() {
+
+        showProgressDialog();
+
+        JsonObjectRequest request = new JsonObjectRequest(Request.Method.GET,
+                statisticsRequestURL, null, new Response.Listener<JSONObject>() {
+                    @Override
+                    public void onResponse(JSONObject response) {
+
+                        try {
+                            int status = response.getInt("status");
+                            if (status == 200) {
+                                mDataManager.unmarshalResponse(response);
+                            } else {
+                                Toast.makeText(getApplicationContext(),
+                                        "Error: " + response.getString("statusMessage"),
+                                        Toast.LENGTH_LONG).show();
+                            }
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                            Toast.makeText(getApplicationContext(),
+                                    "Error: " + e.getMessage(),
+                                    Toast.LENGTH_LONG).show();
+                        }
+
+                        mDataManager.prepareAllData();
+                        inflateAllCharts();
+                        hideProgressDialog();
+                    }
+                }, new Response.ErrorListener() {
+                        @Override
+                        public void onErrorResponse(VolleyError error) {
+                            Toast.makeText(getApplicationContext(),
+                                    error.getMessage(), Toast.LENGTH_SHORT).show();
+                            hideProgressDialog();
+                        }
+        });
+
+        // Set request timeout
+        request.setRetryPolicy(new DefaultRetryPolicy(
+                MY_SOCKET_TIMEOUT_MS,
+                DefaultRetryPolicy.DEFAULT_MAX_RETRIES,
+                DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
+
+        // Add request to request queue
+        AppController.getInstance().addToRequestQueue(request);
+    }
+
+    private void showProgressDialog() {
+        if (!mProgressDialog.isShowing())
+            mProgressDialog.show();
+    }
+
+    private void hideProgressDialog() {
+        if (mProgressDialog.isShowing())
+            mProgressDialog.dismiss();
+    }
+
+    /**
+     * Fling gesture listener for the line chart
+     */
     private class HorizontalFlingListner implements GestureDetector.OnGestureListener {
 
         @Override
         public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
-            // Right to left
-            if(e1.getX() - e2.getX() > SWIPE_MIN_DISTANCE && Math.abs(velocityX) > SWIPE_THRESHOLD_VELOCITY) {
-                if (mRadioMonth.isChecked() && mRadioMonth.isEnabled()) {
-                    mRadioWeek.setChecked(true);
-                    switchToWeekLineChartVew();
-
-                }
-                return false;
-                // Left to right
-            }  else if (e2.getX() - e1.getX() > SWIPE_MIN_DISTANCE && Math.abs(velocityX) > SWIPE_THRESHOLD_VELOCITY) {
-                if (mRadioWeek.isChecked() && mRadioWeek.isEnabled()) {
-                    mRadioMonth.setChecked(true);
-                    switchToMonthLineChartVew();
-                }
-                return false;
+            // Fling right to left or left to right
+            if(Math.abs(e1.getX() - e2.getX()) > SWIPE_MIN_DISTANCE && Math.abs(velocityX) > SWIPE_THRESHOLD_VELOCITY) {
+                switchRadioButtonsAndLineChartView();
             }
             return false;
         }
@@ -181,25 +239,32 @@ public class MainActivity extends AppCompatActivity {
      * Switch to month view on the line chart
      */
     private void switchToMonthLineChartVew() {
-        mCurrentLineChartPresentation = mMonthLineChartPresentation;
-        switchLineChartView();
+        mDataManager.setCurrentLineChartPresentationToMonth();
+        setRadioGroupEnabled(false);
+        inflateAllCharts();
     }
 
     /**
      * Switch to week view on the line chart
      */
     private void switchToWeekLineChartVew() {
-        mCurrentLineChartPresentation = mWeekLineChartPresentation;
-        switchLineChartView();
-
+        mDataManager.setCurrentLineChartPresentationToWeek();
+        setRadioGroupEnabled(false);
+        inflateAllCharts();
     }
 
     /**
      * Switch view on the line chart
      */
-    private void switchLineChartView() {
-        setRadioGroupEnabled(false);
-        inflateAllCharts();
+    private void switchRadioButtonsAndLineChartView() {
+
+        if (mRadioWeek.isChecked()) {
+            mRadioMonth.setChecked(true);
+            switchToMonthLineChartVew();
+        } else {
+            mRadioWeek.setChecked(true);
+            switchToWeekLineChartVew();
+        }
     }
 
     /**
@@ -221,118 +286,6 @@ public class MainActivity extends AppCompatActivity {
                     switchToMonthLineChartVew();
                     break;
             }
-        }
-    }
-
-    /**
-     * Prepare data for the Line Chart.
-     *
-     * @param days Number of Jimdo day usage statistics
-     * @return {@link LineChartPresentation} object for Line Chart initialization
-     */
-    private LineChartPresentation prepareLineChartData(int days) {
-
-        LineChartPresentation lcp = new LineChartPresentation();
-
-        //initialize the LineChartPresentation instance
-        lcp.visitsArray = new float[days + 1];
-        lcp.pageViewsArray = new float[days + 1];
-        lcp.datesArray = new String[days + 1];
-        //Max value of visits or page views in the stats
-        lcp.maxValue = 0;
-
-        //first row is empty to avoid points being drawn directly on the y-axis
-        lcp.datesArray[0] = "";
-
-        for (int i = 1; i <= days; i++) {
-            setDayStatisticsToPresentation(lcp, days, i);
-        }
-
-        //Round maxValue up to the closest 10
-        lcp.maxValue = (int) Math.ceil(lcp.maxValue / 10d) * 10;
-        //Calculate step so that we always have exactly 10 segments on the y-axis
-        lcp.step = (int) Math.floor(lcp.maxValue / 10);
-
-        return lcp;
-    }
-
-    /**
-     * Prepare data for the devices Pie Chart.
-     *
-     * @param days umber of Jimdo day usage statistics
-     * @return {@link PieChartPresentation} object for Pie Chart initialization
-     */
-    private PieChartPresentation prepareDevicesPieChartData(int days) {
-
-        //TODO: add more colors for more devices
-        String[] colors = {"#FE6DA8", "#56B7F1", "#FED70E", "#CDA67F"};
-        PieChartPresentation pieChartPresentation = new PieChartPresentation();
-
-        int differentDevices = 0;
-        int overallDevices = 0;
-
-        //generate map of devices names on device model instances
-        Map<String, Device> devicesMap = new HashMap<>();
-
-        for (int day = 0; day < days; day++) {
-            JimdoPerDayStatistics dayStat = mMockStats.get(day);
-            for (Visit visit: dayStat.getVisits()) {
-                String deviceName = visit.getDevice();
-                if (devicesMap.containsKey(deviceName)) {
-                    devicesMap.get(deviceName).incCount(); //count++
-                    overallDevices++;
-                } else {
-                    overallDevices++;
-                    Device device = new Device();
-                    device.setName(deviceName);
-                    device.setColor(colors[differentDevices++]);
-                    device.setCount(1);
-                    devicesMap.put(deviceName, device);
-                }
-            }
-        }
-        //calculate and set usage percent for each device
-        for (String device : devicesMap.keySet()) {
-            Device dp = devicesMap.get(device);
-            dp.setPercent((dp.getCount() * 100) / overallDevices);
-        }
-
-        pieChartPresentation.devices = devicesMap;
-        return pieChartPresentation;
-    }
-
-    /**
-     * Sets data from mMockStats to the given {@link LineChartPresentation} instance
-     * for a specified day.
-     * used by {@link #prepareLineChartData} method.
-     *
-     * @param lcp  {@link LineChartPresentation} instance
-     * @param days Overall days to be set in the lcp ({@link LineChartPresentation})
-     * @param day  For which day should the data be set. Value of this param may vary from 1 to n.
-     */
-    private void setDayStatisticsToPresentation(LineChartPresentation lcp, int days, int day) {
-
-        // retrieve the mock stats starting from index 0
-        JimdoPerDayStatistics stat = mMockStats.get(day - 1);
-
-        int visits = stat.getVisitCount();
-        int pageViews = stat.getPageViewCount();
-
-        // update the maxValue of the LineChartPresentation
-        if (visits > lcp.maxValue || pageViews > lcp.maxValue) {
-            lcp.maxValue = Math.max(visits, pageViews);
-        }
-
-        lcp.visitsArray[day] = visits;
-        lcp.pageViewsArray[day] = pageViews;
-
-        // in month view add only every 4th date to avoid overfilling thy x-axis
-        if (days == WEEK_DAYS) {
-            lcp.datesArray[day] = stat.getShortDate();
-        } else if ((day % 4) == 0) {
-            lcp.datesArray[day] = stat.getShortDate();
-        } else {
-            lcp.datesArray[day] = "";
         }
     }
 
@@ -408,7 +361,10 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public void onResume() {
         super.onResume();
-        inflateAllCharts();
+        //redraw charts if Activity gets destroyed
+        if (mDataManager.isDataAvailable()) {
+            inflateAllCharts();
+        }
     }
 
     /**
@@ -478,14 +434,12 @@ public class MainActivity extends AppCompatActivity {
                 LayoutParams.WRAP_CONTENT);
 
         //Choose devicePieChartPresentation
-        PieChartPresentation pieChartPresentation;
-        int datesShownInLineChart = mCurrentLineChartPresentation.datesArray.length - 1;
-        if (WEEK_DAYS == datesShownInLineChart) {
-            pieChartPresentation = mWeekDevicesPieChartPresentation;
-        } else if (MONTH_DAYS == datesShownInLineChart) {
-            pieChartPresentation = mMonthDevicesPieChartPresentation;
-        } else {
-            pieChartPresentation = prepareDevicesPieChartData(datesShownInLineChart);
+        PieChartPresentation pieChartPresentation = null;
+        int datesShownInLineChart = mDataManager.getCurrentLineChartPresentation().datesArray.length - 1;
+        if (Constants.WEEK_DAYS == datesShownInLineChart) {
+            pieChartPresentation = mDataManager.getWeekDevicesPieChartPresentation();
+        } else if (Constants.MONTH_DAYS == datesShownInLineChart) {
+            pieChartPresentation = mDataManager.getMonthDevicesPieChartPresentation();
         }
 
         //Add slices to the pie chart and inflate the devices agenda
@@ -512,6 +466,13 @@ public class MainActivity extends AppCompatActivity {
             mPopupWindow.dismiss();
         } else {
             super.onBackPressed();
+        }
+    }
+
+    public void onSaveInstanceState(Bundle bundle) {
+        super.onSaveInstanceState(bundle);
+        if (mDataManager.isDataAvailable()) {
+            bundle.putString("jsonResponse", mDataManager.getJsonStatistics().toString());
         }
     }
 

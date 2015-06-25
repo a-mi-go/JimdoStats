@@ -4,6 +4,10 @@
  */
 package de.goldenzweig.jimdostats.model;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -12,7 +16,6 @@ public class Visit {
     private List<PageView> pageViews;
 
     private String referer;
-    private String userAgent;
     private String device;
     private String os;
 
@@ -56,20 +59,6 @@ public class Visit {
     }
 
     /**
-     * @return User agent information
-     */
-    public String getUserAgent() {
-        return userAgent;
-    }
-
-    /**
-     * @param userAgent User agent information
-     */
-    public void setUserAgent(String userAgent) {
-        this.userAgent = userAgent;
-    }
-
-    /**
      * @return Device used for visiting the website
      */
     public String getDevice() {
@@ -102,9 +91,21 @@ public class Visit {
         return "Visit{" +
                 "pageViews=" + pageViews +
                 ", referer='" + referer + '\'' +
-                ", userAgent='" + userAgent + '\'' +
                 ", device='" + device + '\'' +
                 ", os='" + os + '\'' +
                 '}';
+    }
+
+    public JSONObject toJSON() throws JSONException {
+        JSONObject json = new JSONObject();
+        JSONArray jsonPageViews = new JSONArray();
+        for (PageView pageView: pageViews) {
+            jsonPageViews.put(pageView.toJSON());
+        }
+        json.put("pageViews", jsonPageViews);
+        json.put("referer", referer);
+        json.put("device", device);
+        json.put("os", os);
+        return json;
     }
 }
