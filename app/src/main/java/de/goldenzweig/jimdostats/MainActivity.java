@@ -45,6 +45,7 @@ import org.eazegraph.lib.models.PieModel;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.net.HttpURLConnection;
 import java.text.DecimalFormat;
 
 import de.goldenzweig.jimdostats.model.Device;
@@ -59,7 +60,9 @@ public class MainActivity extends AppCompatActivity {
     private static final int SWIPE_THRESHOLD_VELOCITY = 200;
     private static final int MY_SOCKET_TIMEOUT_MS = 10000;
 
-    private static final String statisticsRequestURL = "http://localhost:8080/statistics";
+    private static final String statisticsRequestDomain = "http://localhost";
+    private static final String statisticsRequestPort = "8080";
+    private static final String statisticRequestsPath = "/statistics";
 
     //Animation Style
     private BaseEasingMethod mCurrEasing = new QuintEaseOut();
@@ -76,6 +79,14 @@ public class MainActivity extends AppCompatActivity {
 
     private DataManager mDataManager;
 
+
+    /**
+     * @return full URL for Jimdo Statistics server request
+     */
+    private String buildStatisticsRequestURL() {
+        return statisticsRequestDomain + ":" + statisticsRequestPort + statisticRequestsPath;
+    }
+
     /**
      * Inflates and redraws line chart in separate thread.
      */
@@ -86,7 +97,7 @@ public class MainActivity extends AppCompatActivity {
                 public void run() {
                     inflateLineChart(mDataManager.getCurrentLineChartPresentation());
                 }
-            }, 100);
+            }, 100); //ms
         }
     };
 
@@ -97,6 +108,7 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public void run() {
             setRadioGroupEnabled(true);
+            mLineChart.setEnabled(true);
         }
     };
 
@@ -147,7 +159,7 @@ public class MainActivity extends AppCompatActivity {
         showProgressDialog();
 
         JsonObjectRequest request = new JsonObjectRequest(Request.Method.GET,
-                statisticsRequestURL, null, new Response.Listener<JSONObject>() {
+                buildStatisticsRequestURL(), null, new Response.Listener<JSONObject>() {
                     @Override
                     public void onResponse(JSONObject response) {
                         handleRequestJimdoPerDayStatisticsResponse(response);
@@ -178,7 +190,7 @@ public class MainActivity extends AppCompatActivity {
     private void handleRequestJimdoPerDayStatisticsResponse(JSONObject response) {
         try {
             int status = response.getInt("status");
-            if (status == 200) {
+            if (status == HttpURLConnection.HTTP_OK) {
                 mDataManager.unmarshalResponse(response);
             } else {
                 Toast.makeText(getApplicationContext(),
@@ -212,8 +224,7 @@ public class MainActivity extends AppCompatActivity {
      */
     private void setLineChartFlingListner() {
         final GestureDetector gdt = new GestureDetector(this, new HorizontalFlingListner());
-        final LineChartView lineChart = (LineChartView) findViewById(R.id.linechart);
-        lineChart.setOnTouchListener(new View.OnTouchListener() {
+        mLineChart.setOnTouchListener(new View.OnTouchListener() {
             @Override
             public boolean onTouch(final View view, final MotionEvent event) {
                 gdt.onTouchEvent(event);
@@ -249,6 +260,7 @@ public class MainActivity extends AppCompatActivity {
     private void switchToMonthLineChartVew() {
         mDataManager.setCurrentLineChartPresentationToMonth();
         setRadioGroupEnabled(false);
+        mLineChart.setEnabled(false);
         inflateAllCharts();
     }
 
@@ -258,6 +270,7 @@ public class MainActivity extends AppCompatActivity {
     private void switchToWeekLineChartVew() {
         mDataManager.setCurrentLineChartPresentationToWeek();
         setRadioGroupEnabled(false);
+        mLineChart.setEnabled(false);
         inflateAllCharts();
     }
 
