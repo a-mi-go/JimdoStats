@@ -139,17 +139,7 @@ public class MainActivity extends AppCompatActivity {
             // recover data from the bundle
             mDataManager.recoverData(savedInstanceState.getString("jsonResponse"));
         }
-
-        //set fling listner on the line chart
-        final GestureDetector gdt = new GestureDetector(this, new HorizontalFlingListner());
-        final LineChartView lineChart = (LineChartView) findViewById(R.id.linechart);
-        lineChart.setOnTouchListener(new View.OnTouchListener() {
-            @Override
-            public boolean onTouch(final View view, final MotionEvent event) {
-                gdt.onTouchEvent(event);
-                return true;
-            }
-        });
+        setLineChartFlingListner();
     }
 
     /**
@@ -164,26 +154,7 @@ public class MainActivity extends AppCompatActivity {
                 statisticsRequestURL, null, new Response.Listener<JSONObject>() {
                     @Override
                     public void onResponse(JSONObject response) {
-
-                        try {
-                            int status = response.getInt("status");
-                            if (status == 200) {
-                                mDataManager.unmarshalResponse(response);
-                            } else {
-                                Toast.makeText(getApplicationContext(),
-                                        "Error: " + response.getString("statusMessage"),
-                                        Toast.LENGTH_LONG).show();
-                            }
-                        } catch (JSONException e) {
-                            e.printStackTrace();
-                            Toast.makeText(getApplicationContext(),
-                                    "Error: " + e.getMessage(),
-                                    Toast.LENGTH_LONG).show();
-                        }
-
-                        mDataManager.prepareAllData();
-                        inflateAllCharts();
-                        hideProgressDialog();
+                        handleRequestJimdoPerDayStatisticsResponse(response);
                     }
                 }, new Response.ErrorListener() {
                         @Override
@@ -204,6 +175,32 @@ public class MainActivity extends AppCompatActivity {
         AppController.getInstance().addToRequestQueue(request);
     }
 
+    /**
+     * Handle the response: unmarshal response, prepare data, inflate charts.
+     * @param response JSON response
+     */
+    private void handleRequestJimdoPerDayStatisticsResponse(JSONObject response) {
+        try {
+            int status = response.getInt("status");
+            if (status == 200) {
+                mDataManager.unmarshalResponse(response);
+            } else {
+                Toast.makeText(getApplicationContext(),
+                        "Error: " + response.getString("statusMessage"),
+                        Toast.LENGTH_LONG).show();
+            }
+        } catch (JSONException e) {
+            e.printStackTrace();
+            Toast.makeText(getApplicationContext(),
+                    "Error: " + e.getMessage(),
+                    Toast.LENGTH_LONG).show();
+        }
+
+        mDataManager.prepareAllData();
+        inflateAllCharts();
+        hideProgressDialog();
+    }
+
     private void showProgressDialog() {
         if (!mProgressDialog.isShowing())
             mProgressDialog.show();
@@ -212,6 +209,21 @@ public class MainActivity extends AppCompatActivity {
     private void hideProgressDialog() {
         if (mProgressDialog.isShowing())
             mProgressDialog.dismiss();
+    }
+
+    /**
+     * set fling listner on the line chart
+     */
+    private void setLineChartFlingListner() {
+        final GestureDetector gdt = new GestureDetector(this, new HorizontalFlingListner());
+        final LineChartView lineChart = (LineChartView) findViewById(R.id.linechart);
+        lineChart.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(final View view, final MotionEvent event) {
+                gdt.onTouchEvent(event);
+                return true;
+            }
+        });
     }
 
     /**
@@ -311,34 +323,17 @@ public class MainActivity extends AppCompatActivity {
         //init and add "visits" line to the chart
         LineSet dataSet = new LineSet();
         dataSet.addPoints(lcp.datesArray, lcp.visitsArray);
-        dataSet.setDots(true)
-                .setDotsColor(this.getResources().getColor(R.color.line_visits_bg))
-                .setDotsRadius(Tools.fromDpToPx(5))
-                .setDotsStrokeThickness(Tools.fromDpToPx(2))
-                .setDotsStrokeColor(this.getResources().getColor(R.color.line_visits))
-                .setLineColor(this.getResources().getColor(R.color.line_visits))
-                .setLineThickness(Tools.fromDpToPx(3))
-                .beginAt(1).endAt(lcp.datesArray.length);
-
+        setDotsAndLinesOptions(dataSet, R.color.line_visits_bg, R.color.line_visits, lcp.datesArray.length);
         mLineChart.addData(dataSet);
 
         //init and add "page views" line to the chart
         dataSet = new LineSet();
         dataSet.addPoints(lcp.datesArray, lcp.pageViewsArray);
-        dataSet.setDots(true)
-                .setDotsColor(this.getResources().getColor(R.color.line_pageviews_bg))
-                .setDotsRadius(Tools.fromDpToPx(5))
-                .setDotsStrokeThickness(Tools.fromDpToPx(2))
-                .setDotsStrokeColor(this.getResources().getColor(R.color.line_pageviews))
-                .setLineColor(this.getResources().getColor(R.color.line_pageviews))
-                .setLineThickness(Tools.fromDpToPx(3))
-                .beginAt(1).endAt(lcp.datesArray.length);
-
+        setDotsAndLinesOptions(dataSet, R.color.line_pageviews_bg, R.color.line_pageviews, lcp.datesArray.length);
         mLineChart.addData(dataSet);
 
         //general initialization
         mLineChart.setAxisBorderValues(0, lcp.maxValue, lcp.step);
-
         Paint mLineGridPaint = new Paint();
         mLineGridPaint.setColor(this.getResources().getColor(R.color.line_grid));
         mLineGridPaint.setPathEffect(new DashPathEffect(new float[]{5, 5}, 0));
@@ -356,6 +351,17 @@ public class MainActivity extends AppCompatActivity {
 
         Animation animation = new Animation().setEasing(mCurrEasing);
         mLineChart.show(animation.setEndAction(mAnimationEndAction));
+    }
+
+    private void setDotsAndLinesOptions(LineSet dataSet, int dotsColorId, int lineColorId, int end) {
+        dataSet.setDots(true)
+                .setDotsColor(this.getResources().getColor(dotsColorId))
+                .setDotsRadius(Tools.fromDpToPx(5))
+                .setDotsStrokeThickness(Tools.fromDpToPx(2))
+                .setDotsStrokeColor(this.getResources().getColor(lineColorId))
+                .setLineColor(this.getResources().getColor(lineColorId))
+                .setLineThickness(Tools.fromDpToPx(3))
+                .beginAt(1).endAt(end);
     }
 
     @Override
