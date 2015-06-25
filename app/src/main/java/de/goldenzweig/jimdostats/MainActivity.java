@@ -135,10 +135,8 @@ public class MainActivity extends AppCompatActivity {
         if (savedInstanceState == null) {
             // request monthly statistics from server
             requestJimdoPerDayStatistics();
-        } else {
-            // recover data from the bundle
-            mDataManager.recoverData(savedInstanceState.getString("jsonResponse"));
         }
+
         setLineChartFlingListner();
     }
 
@@ -401,10 +399,7 @@ public class MainActivity extends AppCompatActivity {
     public void onTopDevicesButtonClicked(View view) {
 
         //create and show a popup window
-        LayoutInflater layoutInflater
-                = (LayoutInflater) getBaseContext()
-                .getSystemService(LAYOUT_INFLATER_SERVICE);
-
+        LayoutInflater layoutInflater = (LayoutInflater) getBaseContext().getSystemService(LAYOUT_INFLATER_SERVICE);
         View popupView = layoutInflater.inflate(R.layout.devices_pie_chart, null);
 
         DisplayMetrics displayMetrics = new DisplayMetrics();
@@ -475,10 +470,32 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    public void onSaveInstanceState(Bundle bundle) {
+    @Override
+    protected void onSaveInstanceState(Bundle bundle) {
         super.onSaveInstanceState(bundle);
         if (mDataManager.isDataAvailable()) {
             bundle.putString("jsonResponse", mDataManager.getJsonStatistics().toString());
+        }
+        if (mPopupWindow != null && mPopupWindow.isShowing() == true) {
+            mPopupWindow.dismiss();
+            bundle.putBoolean("popupShowing", true);
+        }
+    }
+
+    @Override
+    protected void onRestoreInstanceState(Bundle savedInstanceState) {
+        super.onRestoreInstanceState(savedInstanceState);
+        mDataManager.recoverData(savedInstanceState.getString("jsonResponse"));
+
+        // if devices popup was showing before activity was killed, show it again after activity is created again
+        if (savedInstanceState.getBoolean("popupShowing") == true) {
+            LayoutInflater layoutInflater = (LayoutInflater) getBaseContext().getSystemService(LAYOUT_INFLATER_SERVICE);
+            View popupView = layoutInflater.inflate(R.layout.devices_pie_chart, null);
+            popupView.post(new Runnable() {
+                public void run() {
+                    onTopDevicesButtonClicked(null);
+                }
+            });
         }
     }
 
