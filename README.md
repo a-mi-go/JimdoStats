@@ -14,6 +14,21 @@ App utilizes following open source libraries:
 
 [Volley](https://developer.android.com/training/volley/index.html)
 
+###### Release notes 25.06.2015
+* Added backend with NanoHTTP Server to provide mock data as a RESTfull webservice
+* Consume service with google volley
+* JSON marshaling and unmarshaling
+* Save/Restore data in onSaveInstanceState
+* Extracted DataManager Class to handle data transformations
+* 2-way fling listner
+* bugfixes in line chart presentation
+
+###### Release notes 24.06.2015
+* Popup window with devices statistics and an animated PieChart!
+* Code/Package restructure
+* Minor bugfixes and UI improvements
+* Improve names and comments
+
 License
 -------
 
