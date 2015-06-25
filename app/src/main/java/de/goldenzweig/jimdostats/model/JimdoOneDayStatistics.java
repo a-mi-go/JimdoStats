@@ -47,7 +47,8 @@ public class JimdoOneDayStatistics implements IJimdoPerDayStatistics {
 
     @Override
     public String getDate() {
-        return date.toString();
+        SimpleDateFormat formatter = new SimpleDateFormat("EEE MMM dd HH:mm:ss zzz yyyy");
+        return formatter.format(date);
     }
 
     @Override
