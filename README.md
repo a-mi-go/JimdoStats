@@ -1,6 +1,9 @@
 # JimdoStats
 
 JimdoStats is a small demo app that utilizes some of the [WilliamChart](https://github.com/diogobernardino/WilliamChart) and [EazeGraph](https://github.com/blackfizz/EazeGraph) functionality.
+Other libraries used:
+[Nanohttpd](http://nanohttpd.org/)
+[Volley](https://developer.android.com/training/volley/index.html)
 
 License
 -------
