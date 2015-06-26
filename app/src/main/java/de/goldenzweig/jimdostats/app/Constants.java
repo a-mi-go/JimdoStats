@@ -2,7 +2,7 @@
  * Copyright (C) 2015 Mikhail Goldenzweig
  * MIT Licence
  */
-package de.goldenzweig.jimdostats;
+package de.goldenzweig.jimdostats.app;
 
 public final class Constants {
     // Number of days in a week

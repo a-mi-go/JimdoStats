@@ -2,7 +2,7 @@
  * Copyright (C) 2015 Mikhail Goldenzweig
  * MIT Licence
  */
-package de.goldenzweig.jimdostats;
+package de.goldenzweig.jimdostats.app;
 
 import android.app.ProgressDialog;
 import android.graphics.Color;
@@ -48,9 +48,10 @@ import org.json.JSONObject;
 import java.net.HttpURLConnection;
 import java.text.DecimalFormat;
 
+import de.goldenzweig.jimdostats.R;
+import de.goldenzweig.jimdostats.app.presentation.LineChartPresentation;
+import de.goldenzweig.jimdostats.app.presentation.PieChartPresentation;
 import de.goldenzweig.jimdostats.model.Device;
-import de.goldenzweig.jimdostats.presentation.LineChartPresentation;
-import de.goldenzweig.jimdostats.presentation.PieChartPresentation;
 
 
 public class MainActivity extends AppCompatActivity {
@@ -455,7 +456,7 @@ public class MainActivity extends AppCompatActivity {
         }
 
         //Add slices to the pie chart and inflate the devices agenda
-        for (String device : pieChartPresentation.devices.keySet()) {
+        for (String device: pieChartPresentation.devices.keySet()) {
             Device dp = pieChartPresentation.devices.get(device);
             pieChart.addPieSlice(
                     new PieModel(device, dp.getCount(), Color.parseColor(dp.getColor())));

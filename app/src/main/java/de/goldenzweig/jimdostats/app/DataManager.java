@@ -2,7 +2,7 @@
  * Copyright (C) 2015 Mikhail Goldenzweig
  * MIT Licence
  */
-package de.goldenzweig.jimdostats;
+package de.goldenzweig.jimdostats.app;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -15,12 +15,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import de.goldenzweig.jimdostats.app.presentation.LineChartPresentation;
+import de.goldenzweig.jimdostats.app.presentation.PieChartPresentation;
 import de.goldenzweig.jimdostats.model.Device;
 import de.goldenzweig.jimdostats.model.JimdoOneDayStatistics;
 import de.goldenzweig.jimdostats.model.PageView;
 import de.goldenzweig.jimdostats.model.Visit;
-import de.goldenzweig.jimdostats.presentation.LineChartPresentation;
-import de.goldenzweig.jimdostats.presentation.PieChartPresentation;
 
 public class DataManager {
 

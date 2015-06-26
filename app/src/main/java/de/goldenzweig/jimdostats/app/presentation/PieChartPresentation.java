@@ -2,9 +2,10 @@
  * Copyright (C) 2015 Mikhail Goldenzweig
  * MIT Licence
  */
-package de.goldenzweig.jimdostats.presentation;
+package de.goldenzweig.jimdostats.app.presentation;
 
 import java.util.Map;
+
 import de.goldenzweig.jimdostats.model.Device;
 
 public class PieChartPresentation {

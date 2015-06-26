@@ -2,11 +2,9 @@
  * Copyright (C) 2015 Mikhail Goldenzweig
  * MIT Licence
  */
-package de.goldenzweig.jimdostats.backend;
+package de.goldenzweig.jimdostats.model;
 
 import java.util.List;
-
-import de.goldenzweig.jimdostats.model.Visit;
 
 public interface IJimdoPerDayStatistics {
 

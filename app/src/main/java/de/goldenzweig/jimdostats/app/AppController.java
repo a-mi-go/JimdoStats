@@ -2,7 +2,7 @@
  * Copyright (C) 2015 Mikhail Goldenzweig
  * MIT Licence
  */
-package de.goldenzweig.jimdostats;
+package de.goldenzweig.jimdostats.app;
 
 import android.app.Application;
 import android.text.TextUtils;
