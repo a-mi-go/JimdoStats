@@ -9,6 +9,7 @@
 ###### ui design
 * Improve design / UI interaction
 * Fix layout for pie chart popup in horisontal orientation
+* Popup window padding might not look good on different screens - line 421 (MainAclivity)
 
 ###### feature
 * implement top pages and top referer features
