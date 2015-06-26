@@ -22,6 +22,7 @@ Changelog
  * Extracted DataManager Class to handle data transformations
  * 2-way fling listner
  * bugfixes in line chart presentation
+ 
 - 24.06.2015
  * Popup window with devices statistics and an animated PieChart!
  * Code/Package restructure
