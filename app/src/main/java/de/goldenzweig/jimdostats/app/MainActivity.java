@@ -475,10 +475,17 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public void onBackPressed() {
+        // if popup window is showing, only dismiss the popup window.
         if (mPopupWindow != null && mPopupWindow.isShowing()) {
             mPopupWindow.dismiss();
         } else {
-            super.onBackPressed();
+        /*
+         * Move the task containing this activity to the back of the activity stack
+         * rather than calling super.onBackPressed() which destroys current activity.
+         * This way data is saved in onSaveInstanceState(Bundle bundle)
+         * and no extra request to server is needed
+         */
+            moveTaskToBack(true);
         }
     }
 
