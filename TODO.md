@@ -6,7 +6,7 @@
   (reason for disabling - William chart animation is not thread safe)
 * implement JUnit tests
 
-###### design
+###### ui design
 * Improve design / UI interaction
 * Fix layout for pie chart popup in horisontal orientation
 
