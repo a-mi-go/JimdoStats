@@ -40,6 +40,9 @@ public class AppController extends Application {
         return mInstance;
     }
 
+    /**
+     * @return volley RequestQueue
+     */
     public RequestQueue getRequestQueue() {
         if (mRequestQueue == null) {
             mRequestQueue = Volley.newRequestQueue(getApplicationContext());
@@ -47,16 +50,27 @@ public class AppController extends Application {
         return mRequestQueue;
     }
 
+    /**
+     *
+     * @param req The request to service
+     * @param tag Tag set to the request
+     */
     public <T> void addToRequestQueue(Request<T> req, String tag) {
         req.setTag(TextUtils.isEmpty(tag) ? TAG : tag);
         getRequestQueue().add(req);
     }
 
+    /**
+     * @param req The request to service
+     */
     public <T> void addToRequestQueue(Request<T> req) {
         req.setTag(TAG);
         getRequestQueue().add(req);
     }
 
+    /**
+     * @param tag Tag of the request that should be canceled
+     */
     public void cancelPendingRequests(Object tag) {
         if (mRequestQueue != null) {
             mRequestQueue.cancelAll(tag);
