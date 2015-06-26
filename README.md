@@ -6,13 +6,10 @@ JimdoStats is a small demo app that combines:
 
 App utilizes following open source libraries: 
 
-[WilliamChart](https://github.com/diogobernardino/WilliamChart)
-
-[EazeGraph](https://github.com/blackfizz/EazeGraph)
-
-[Nanohttpd](http://nanohttpd.org/)
-
-[Volley](https://developer.android.com/training/volley/index.html)
+- [WilliamChart](https://github.com/diogobernardino/WilliamChart)
+- [EazeGraph](https://github.com/blackfizz/EazeGraph)
+- [Nanohttpd](http://nanohttpd.org/)
+- [Volley](https://developer.android.com/training/volley/index.html)
 
 Changelog
 ---------
