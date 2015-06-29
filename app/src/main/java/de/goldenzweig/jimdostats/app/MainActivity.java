@@ -9,7 +9,6 @@ import android.graphics.Color;
 import android.graphics.DashPathEffect;
 import android.graphics.Paint;
 import android.os.Bundle;
-import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
 import android.text.Html;
 import android.util.DisplayMetrics;
@@ -76,53 +75,8 @@ public class MainActivity extends AppCompatActivity {
     private PopupWindow mPopupWindow;
     private ProgressDialog mProgressDialog;
 
-    private Handler mHandler;
-
     private DataManager mDataManager;
 
-
-    /**
-     * @return full URL for Jimdo Statistics server request
-     */
-    private String buildStatisticsRequestURL() {
-        return statisticsRequestDomain + ":" + statisticsRequestPort + statisticRequestsPath;
-    }
-
-    /**
-     * Inflates and redraws line chart in separate thread.
-     */
-    private final Runnable mInflateChartThread = new Runnable() {
-        @Override
-        public void run() {
-            mHandler.postDelayed(new Runnable() {
-                public void run() {
-                    inflateLineChart(mDataManager.getCurrentLineChartPresentation());
-                }
-            }, 100); //ms
-        }
-    };
-
-    /**
-     * Enables radioGroup after chart animation is finished.
-     */
-    private final Runnable mAnimationEndAction = new Runnable() {
-        @Override
-        public void run() {
-            setRadioGroupEnabled(true);
-            mLineChart.setEnabled(true);
-        }
-    };
-
-    /**
-     * Enables or disables all radioButtons in the radio group.
-     */
-    private void setRadioGroupEnabled(boolean enabled) {
-        if (mRadioGroup != null) {
-            for (int i = 0; i < mRadioGroup.getChildCount(); i++) {
-                mRadioGroup.getChildAt(i).setEnabled(enabled);
-            }
-        }
-    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -136,7 +90,6 @@ public class MainActivity extends AppCompatActivity {
         mRadioGroup = (RadioGroup) findViewById(R.id.radio_group);
         mRadioWeek = (RadioButton) findViewById(R.id.radio_week);
         mRadioMonth = (RadioButton) findViewById(R.id.radio_month);
-        mHandler = new Handler();
 
         mProgressDialog = new ProgressDialog(this);
         mProgressDialog.setMessage("Please wait...");
@@ -149,6 +102,49 @@ public class MainActivity extends AppCompatActivity {
         }
 
         setLineChartFlingListner();
+    }
+
+    /**
+     * @return full URL for Jimdo Statistics server request
+     */
+    private String buildStatisticsRequestURL() {
+        return statisticsRequestDomain + ":" + statisticsRequestPort + statisticRequestsPath;
+    }
+
+    /**
+     * Action performed after the Line Chart animation is finished.
+     */
+    private final Runnable mAnimationEndAction = new Runnable() {
+        @Override
+        public void run() {
+            setLineChartUIControllsEnabled(true);
+        }
+    };
+
+    /**
+     * Set the enable state of the radio group.
+     */
+    private void setRadioGroupEnabled(boolean enabled) {
+        if (mRadioGroup != null) {
+            for (int i = 0; i < mRadioGroup.getChildCount(); i++) {
+                mRadioGroup.getChildAt(i).setEnabled(enabled);
+            }
+        }
+    }
+
+    /**
+     * Set the enable state of all UI that controls the Line Chart.
+     * @param enabled True if the UI should be enabled, false otherwise
+     */
+    private void setLineChartUIControllsEnabled(boolean enabled) {
+        setRadioGroupEnabled(enabled);
+        mLineChart.setEnabled(enabled);
+
+// TODO: instead of disabling the UI try to dismiss the prev animation
+//        if (enabled == false) {
+//            mLineChart.clearAnimation();
+//            mLineChart.reset();
+//        }
     }
 
     /**
@@ -210,11 +206,17 @@ public class MainActivity extends AppCompatActivity {
         hideProgressDialog();
     }
 
+    /**
+     * Show the progress dialog while the request is running.
+     */
     private void showProgressDialog() {
         if (!mProgressDialog.isShowing())
             mProgressDialog.show();
     }
 
+    /**
+     * Hide the progress dialog on response.
+     */
     private void hideProgressDialog() {
         if (mProgressDialog.isShowing())
             mProgressDialog.dismiss();
@@ -259,9 +261,8 @@ public class MainActivity extends AppCompatActivity {
      * Switch to month view on the line chart
      */
     private void switchToMonthLineChartVew() {
+        setLineChartUIControllsEnabled(false);
         mDataManager.setCurrentLineChartPresentationToMonth();
-        setRadioGroupEnabled(false);
-        mLineChart.setEnabled(false);
         inflateAllCharts();
     }
 
@@ -269,9 +270,8 @@ public class MainActivity extends AppCompatActivity {
      * Switch to week view on the line chart
      */
     private void switchToWeekLineChartVew() {
+        setLineChartUIControllsEnabled(false);
         mDataManager.setCurrentLineChartPresentationToWeek();
-        setRadioGroupEnabled(false);
-        mLineChart.setEnabled(false);
         inflateAllCharts();
     }
 
@@ -315,7 +315,7 @@ public class MainActivity extends AppCompatActivity {
      *  Inflates the Line Chart and every other chart that should be shown
      */
     private void inflateAllCharts() {
-        mInflateChartThread.run();
+        inflateLineChart(mDataManager.getCurrentLineChartPresentation());
         if (mPopupWindow != null && mPopupWindow.isShowing()) {
             inflateDevicesPieChartPopup();
         }
@@ -363,6 +363,13 @@ public class MainActivity extends AppCompatActivity {
         mLineChart.show(animation.setEndAction(mAnimationEndAction));
     }
 
+    /**
+     * Set options for a line to be drawn in the line chart.
+     * @param dataSet Line model
+     * @param dotsColorId Color of the dots on the line
+     * @param lineColorId Color of the line
+     * @param end index of the last point to be drawn
+     */
     private void setDotsAndLinesOptions(LineSet dataSet, int dotsColorId, int lineColorId, int end) {
         dataSet.setDots(true)
                 .setDotsColor(this.getResources().getColor(dotsColorId))
@@ -447,11 +454,11 @@ public class MainActivity extends AppCompatActivity {
                 LayoutParams.WRAP_CONTENT);
 
         //Choose devicePieChartPresentation
-        PieChartPresentation pieChartPresentation = null;
+        PieChartPresentation pieChartPresentation;
         int datesShownInLineChart = mDataManager.getCurrentLineChartPresentation().datesArray.length - 1;
         if (Constants.WEEK_DAYS == datesShownInLineChart) {
             pieChartPresentation = mDataManager.getWeekDevicesPieChartPresentation();
-        } else if (Constants.MONTH_DAYS == datesShownInLineChart) {
+        } else { //Constants.MONTH_DAYS == datesShownInLineChart
             pieChartPresentation = mDataManager.getMonthDevicesPieChartPresentation();
         }
 
@@ -497,7 +504,7 @@ public class MainActivity extends AppCompatActivity {
             bundle.putString("jsonResponse", mDataManager.getJsonStatistics().toString());
         }
         // if devices popup is showing dismiss it and save its state
-        if (mPopupWindow != null && mPopupWindow.isShowing() == true) {
+        if (mPopupWindow != null && mPopupWindow.isShowing()) {
             mPopupWindow.dismiss();
             bundle.putBoolean("popupShowing", true);
         }
@@ -509,7 +516,7 @@ public class MainActivity extends AppCompatActivity {
         mDataManager.recoverData(savedInstanceState.getString("jsonResponse"));
 
         // if devices popup was showing before activity was killed, show it again after activity is created again
-        if (savedInstanceState.getBoolean("popupShowing") == true) {
+        if (savedInstanceState.getBoolean("popupShowing")) {
             LayoutInflater layoutInflater = (LayoutInflater) getBaseContext().getSystemService(LAYOUT_INFLATER_SERVICE);
             View popupView = layoutInflater.inflate(R.layout.devices_pie_chart, null);
             popupView.post(new Runnable() {
