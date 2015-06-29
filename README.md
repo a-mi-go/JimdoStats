@@ -15,6 +15,10 @@ Changelog
 ---------
 
 - 25.06.2015
+ * Prevent main activity from getting destroyed when back button is pressed, 
+   thus avoid extra server request calls.
+ 
+- 25.06.2015
  * Added backend with NanoHTTP Server to provide mock data as a RESTfull webservice
  * Consume service with google volley
  * JSON marshaling and unmarshaling
