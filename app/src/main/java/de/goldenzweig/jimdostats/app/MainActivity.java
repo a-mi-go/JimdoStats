@@ -25,11 +25,6 @@ import android.widget.RadioGroup;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.android.volley.DefaultRetryPolicy;
-import com.android.volley.Request;
-import com.android.volley.Response;
-import com.android.volley.VolleyError;
-import com.android.volley.toolbox.JsonObjectRequest;
 import com.db.chart.Tools;
 import com.db.chart.model.LineSet;
 import com.db.chart.view.LineChartView;
@@ -41,10 +36,7 @@ import com.db.chart.view.animation.easing.quint.QuintEaseOut;
 
 import org.eazegraph.lib.charts.PieChart;
 import org.eazegraph.lib.models.PieModel;
-import org.json.JSONException;
-import org.json.JSONObject;
 
-import java.net.HttpURLConnection;
 import java.text.DecimalFormat;
 
 import de.goldenzweig.jimdostats.R;
@@ -53,16 +45,11 @@ import de.goldenzweig.jimdostats.app.presentation.PieChartPresentation;
 import de.goldenzweig.jimdostats.model.Device;
 
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements MainActivityCallBack {
 
     //Constants
     private static final int SWIPE_MIN_DISTANCE = 120;
     private static final int SWIPE_THRESHOLD_VELOCITY = 200;
-    private static final int MY_SOCKET_TIMEOUT_MS = 10000;
-
-    private static final String statisticsRequestDomain = "http://localhost";
-    private static final String statisticsRequestPort = "8080";
-    private static final String statisticRequestsPath = "/statistics";
 
     //Animation Style
     private BaseEasingMethod mCurrEasing = new QuintEaseOut();
@@ -75,15 +62,11 @@ public class MainActivity extends AppCompatActivity {
     private PopupWindow mPopupWindow;
     private ProgressDialog mProgressDialog;
 
-    private DataManager mDataManager;
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
-        mDataManager = new DataManager();
 
         //initialize UI
         mLineChart = (LineChartView) findViewById(R.id.linechart);
@@ -97,18 +80,12 @@ public class MainActivity extends AppCompatActivity {
 
         // if onCreate called for the first time
         if (savedInstanceState == null) {
+            showProgressDialog();
             // request monthly statistics from server
-            requestJimdoPerDayStatistics();
+            HTTPController.getInstance().requestJimdoPerDayStatistics(new MainActivityCallBackProxy(this));
         }
 
         setLineChartFlingListner();
-    }
-
-    /**
-     * @return full URL for Jimdo Statistics server request
-     */
-    private String buildStatisticsRequestURL() {
-        return statisticsRequestDomain + ":" + statisticsRequestPort + statisticRequestsPath;
     }
 
     /**
@@ -139,71 +116,7 @@ public class MainActivity extends AppCompatActivity {
     private void setLineChartUIControllsEnabled(boolean enabled) {
         setRadioGroupEnabled(enabled);
         mLineChart.setEnabled(enabled);
-
-// TODO: instead of disabling the UI try to dismiss the prev animation
-//        if (enabled == false) {
-//            mLineChart.clearAnimation();
-//            mLineChart.reset();
-//        }
-    }
-
-    /**
-     * Request Jimdo website usage statistics from server using google volley library.
-     * Inflate and show data in the line chart.
-     */
-    private void requestJimdoPerDayStatistics() {
-
-        showProgressDialog();
-
-        JsonObjectRequest request = new JsonObjectRequest(Request.Method.GET,
-                buildStatisticsRequestURL(), null, new Response.Listener<JSONObject>() {
-                    @Override
-                    public void onResponse(JSONObject response) {
-                        handleRequestJimdoPerDayStatisticsResponse(response);
-                    }
-                }, new Response.ErrorListener() {
-                        @Override
-                        public void onErrorResponse(VolleyError error) {
-                            Toast.makeText(getApplicationContext(),
-                                    error.getMessage(), Toast.LENGTH_SHORT).show();
-                            hideProgressDialog();
-                        }
-        });
-
-        // Set request timeout
-        request.setRetryPolicy(new DefaultRetryPolicy(
-                MY_SOCKET_TIMEOUT_MS,
-                DefaultRetryPolicy.DEFAULT_MAX_RETRIES,
-                DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
-
-        // Add request to request queue
-        AppController.getInstance().addToRequestQueue(request);
-    }
-
-    /**
-     * Handle the response: unmarshal response, prepare data, inflate charts.
-     * @param response JSON response
-     */
-    private void handleRequestJimdoPerDayStatisticsResponse(JSONObject response) {
-        try {
-            int status = response.getInt("status");
-            if (status == HttpURLConnection.HTTP_OK) {
-                mDataManager.unmarshalResponse(response);
-            } else {
-                Toast.makeText(getApplicationContext(),
-                        "Error: " + response.getString("statusMessage"),
-                        Toast.LENGTH_LONG).show();
-            }
-        } catch (JSONException e) {
-            e.printStackTrace();
-            Toast.makeText(getApplicationContext(),
-                    "Error: " + e.getMessage(),
-                    Toast.LENGTH_LONG).show();
-        }
-
-        mDataManager.prepareAllData();
-        inflateAllCharts();
-        hideProgressDialog();
+        // TODO: instead of disabling the UI try to dismiss the prev animation
     }
 
     /**
@@ -220,6 +133,14 @@ public class MainActivity extends AppCompatActivity {
     private void hideProgressDialog() {
         if (mProgressDialog.isShowing())
             mProgressDialog.dismiss();
+    }
+
+    public void showRequestError(String errorMsg) {
+        if (errorMsg != null) {
+            Toast.makeText(getApplicationContext(),
+                    errorMsg, Toast.LENGTH_SHORT).show();
+        }
+        hideProgressDialog();
     }
 
     /**
@@ -262,7 +183,7 @@ public class MainActivity extends AppCompatActivity {
      */
     private void switchToMonthLineChartVew() {
         setLineChartUIControllsEnabled(false);
-        mDataManager.setCurrentLineChartPresentationToMonth();
+        DataManager.getInstance().setCurrentLineChartPresentationToMonth();
         inflateAllCharts();
     }
 
@@ -271,7 +192,7 @@ public class MainActivity extends AppCompatActivity {
      */
     private void switchToWeekLineChartVew() {
         setLineChartUIControllsEnabled(false);
-        mDataManager.setCurrentLineChartPresentationToWeek();
+        DataManager.getInstance().setCurrentLineChartPresentationToWeek();
         inflateAllCharts();
     }
 
@@ -314,8 +235,8 @@ public class MainActivity extends AppCompatActivity {
     /**
      *  Inflates the Line Chart and every other chart that should be shown
      */
-    private void inflateAllCharts() {
-        inflateLineChart(mDataManager.getCurrentLineChartPresentation());
+    public void inflateAllCharts() {
+        inflateLineChart(DataManager.getInstance().getCurrentLineChartPresentation());
         if (mPopupWindow != null && mPopupWindow.isShowing()) {
             inflateDevicesPieChartPopup();
         }
@@ -385,7 +306,7 @@ public class MainActivity extends AppCompatActivity {
     public void onResume() {
         super.onResume();
         //redraw charts if Activity gets destroyed
-        if (mDataManager.isDataAvailable()) {
+        if (DataManager.getInstance().isDataAvailable()) {
             inflateAllCharts();
         }
     }
@@ -438,7 +359,7 @@ public class MainActivity extends AppCompatActivity {
     /**
      * Inflates Pie Chart Popup window with devices usage statistics.
      */
-    private void inflateDevicesPieChartPopup() {
+    private synchronized void inflateDevicesPieChartPopup() {
 
         View popupView = mPopupWindow.getContentView();
         PieChart pieChart = (PieChart) popupView.findViewById(R.id.pie_chart);
@@ -455,11 +376,11 @@ public class MainActivity extends AppCompatActivity {
 
         //Choose devicePieChartPresentation
         PieChartPresentation pieChartPresentation;
-        int datesShownInLineChart = mDataManager.getCurrentLineChartPresentation().datesArray.length - 1;
+        int datesShownInLineChart = DataManager.getInstance().getCurrentLineChartPresentation().datesArray.length - 1;
         if (Constants.WEEK_DAYS == datesShownInLineChart) {
-            pieChartPresentation = mDataManager.getWeekDevicesPieChartPresentation();
+            pieChartPresentation = DataManager.getInstance().getWeekDevicesPieChartPresentation();
         } else { //Constants.MONTH_DAYS == datesShownInLineChart
-            pieChartPresentation = mDataManager.getMonthDevicesPieChartPresentation();
+            pieChartPresentation = DataManager.getInstance().getMonthDevicesPieChartPresentation();
         }
 
         //Add slices to the pie chart and inflate the devices agenda
@@ -500,8 +421,8 @@ public class MainActivity extends AppCompatActivity {
     protected void onSaveInstanceState(Bundle bundle) {
         super.onSaveInstanceState(bundle);
         // save json response to avoid server requests
-        if (mDataManager.isDataAvailable()) {
-            bundle.putString("jsonResponse", mDataManager.getJsonStatistics().toString());
+        if (DataManager.getInstance().isDataAvailable()) {
+            bundle.putString("jsonResponse", DataManager.getInstance().getJsonStatistics().toString());
         }
         // if devices popup is showing dismiss it and save its state
         if (mPopupWindow != null && mPopupWindow.isShowing()) {
@@ -513,7 +434,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onRestoreInstanceState(Bundle savedInstanceState) {
         super.onRestoreInstanceState(savedInstanceState);
-        mDataManager.recoverData(savedInstanceState.getString("jsonResponse"));
+        DataManager.getInstance().recoverData(savedInstanceState.getString("jsonResponse"));
 
         // if devices popup was showing before activity was killed, show it again after activity is created again
         if (savedInstanceState.getBoolean("popupShowing")) {

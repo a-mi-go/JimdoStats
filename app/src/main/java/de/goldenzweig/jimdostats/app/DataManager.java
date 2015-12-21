@@ -22,7 +22,20 @@ import de.goldenzweig.jimdostats.model.JimdoOneDayStatistics;
 import de.goldenzweig.jimdostats.model.PageView;
 import de.goldenzweig.jimdostats.model.Visit;
 
+/**
+ * Prepares data for presentation
+ */
 public class DataManager {
+
+    // Singleton
+    private static volatile DataManager instance = null;
+    private DataManager() {}
+    public static synchronized DataManager getInstance() {
+        if (instance == null) {
+            instance = new DataManager();
+        }
+        return instance;
+    }
 
     //Data
     private List<JimdoOneDayStatistics> mJimdoStatistics;
@@ -35,20 +48,25 @@ public class DataManager {
     private JSONObject mJsonResponse;
 
     public LineChartPresentation getCurrentLineChartPresentation() {
+
         return mCurrentLineChartPresentation;
     }
     public PieChartPresentation getWeekDevicesPieChartPresentation() {
+
         return mWeekDevicesPieChartPresentation;
     }
     public PieChartPresentation getMonthDevicesPieChartPresentation() {
+
         return mMonthDevicesPieChartPresentation;
     }
+
     public void setCurrentLineChartPresentationToMonth() {
         this.mCurrentLineChartPresentation = mMonthLineChartPresentation;
     }
     public void setCurrentLineChartPresentationToWeek() {
         this.mCurrentLineChartPresentation = mWeekLineChartPresentation;
     }
+
     public JSONObject getJsonStatistics() {
         return mJsonResponse;
     }
