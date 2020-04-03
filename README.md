@@ -28,7 +28,7 @@ Changelog
  * bugfixes in line chart presentation
  
 - 24.06.2015
- * Popup window with devices statistics and an animated PieChart!
+ * Popup window with devices statistics and an animated PieChart
  * Code/Package restructure
  * Minor bugfixes and UI improvements
  * Improve names and comments
